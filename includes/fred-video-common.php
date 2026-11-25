@@ -101,10 +101,24 @@ function fvs_get_stories($post_id, $context = '')
     if (!$post_id) {
         return array();
     }
-    $post_type = get_post_type($post_id);
     if ('' === $context) {
-        $context = (string) $post_type;
+        $context = (string) get_post_type($post_id);
     }
+
+    return (array) apply_filters('fvs_stories', fvs_get_saved_stories($post_id), $post_id, $context);
+}
+
+/**
+ * Stories gravados no post (com fallback legado), sem passar pelo filtro `fvs_stories`.
+ * É o que o admin mostra e salva.
+ *
+ * @param int $post_id
+ * @return array<int,array{id:int,url:string}>
+ */
+function fvs_get_saved_stories($post_id)
+{
+    $post_id   = absint($post_id);
+    $post_type = get_post_type($post_id);
 
     $stories = fvs_sanitize_stories(get_post_meta($post_id, '_fvs_stories', true));
 
@@ -118,7 +132,7 @@ function fvs_get_stories($post_id, $context = '')
         }
     }
 
-    return (array) apply_filters('fvs_stories', $stories, $post_id, $context);
+    return $stories;
 }
 
 /**

@@ -1,0 +1,93 @@
+/* Floating Video Stories - admin */
+
+.fvs-field {
+    padding: 12px;
+}
+
+#fvs_stories_panel .fvs-field {
+    padding: 12px 12px 12px 12px;
+}
+
+.fvs-field-row + .fvs-field-row {
+    margin-top: 20px;
+}
+
+.fvs-field .description {
+    margin: 4px 0 8px;
+}
+
+.fvs-thumb-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.fvs-thumb-controls .fvs-thumb-input {
+    flex: 1 1 280px;
+    max-width: 520px;
+}
+
+.fvs-stories-list {
+    margin: 8px 0 12px;
+    padding: 0;
+    list-style: none;
+    max-width: 640px;
+}
+
+.fvs-story {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 6px;
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+}
+
+.fvs-story-placeholder {
+    height: 118px;
+    margin: 0 0 6px;
+    border: 1px dashed #8c8f94;
+    border-radius: 4px;
+    background: #f6f7f7;
+    visibility: visible !important;
+}
+
+.fvs-handle {
+    cursor: move;
+    color: #8c8f94;
+    flex: 0 0 auto;
+}
+
+.fvs-story-preview {
+    width: 60px;
+    height: 106px;
+    flex: 0 0 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #000;
+}
+
+.fvs-story-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fvs-remove {
+    flex: 0 0 auto;
+}
+
+.fvs-field .fvs-notice {
+    max-width: 640px;
+    margin: 8px 0;
+}
+
+.fvs-field [hidden] {
+    display: none !important;
+}

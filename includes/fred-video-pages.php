@@ -2,16 +2,20 @@
 
 /**
  * Fred Video Produto - Funcionalidade para Páginas
- * Adiciona campos de vídeo às páginas estáticas
+ * Meta box "Vídeos da Página" nas páginas estáticas
  */
 
-// === Adiciona meta box para vídeos nas páginas ===
-add_action('add_meta_boxes', 'fvp_add_page_video_meta_box');
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// === Meta box de vídeos nas páginas ===
+add_action('add_meta_boxes_page', 'fvp_add_page_video_meta_box');
 function fvp_add_page_video_meta_box()
 {
     add_meta_box(
         'fvp_page_video_meta_box',
-        'Vídeos da Página',
+        __('Vídeos da Página', 'floating-video-stories'),
         'fvp_page_video_meta_box_callback',
         'page',
         'normal',
@@ -19,74 +23,20 @@ function fvp_add_page_video_meta_box()
     );
 }
 
-// === Callback para exibir o meta box ===
 function fvp_page_video_meta_box_callback($post)
 {
-    ?>
-    <p class="form-field">
-        <label for="_fred_page_video_thumbnail">Miniatura do vídeo (MP4)</label>
-        <input type="text" class="short" name="_fred_page_video_thumbnail" id="_fred_page_video_thumbnail" value="<?php echo esc_attr(get_post_meta($post->ID, '_fred_page_video_thumbnail', true)); ?>" placeholder="Selecione ou envie um vídeo MP4" style="width: 100%; margin-bottom: 10px;" />
-        <button type="button" class="button upload_video_button_page" data-target="_fred_page_video_thumbnail">Enviar/Selecionar</button>
-    </p>
-
-    <p class="form-field">
-        <label for="_fred_page_video">Vídeo principal (MP4)</label>
-        <input type="text" class="short" name="_fred_page_video" id="_fred_page_video" value="<?php echo esc_attr(get_post_meta($post->ID, '_fred_page_video', true)); ?>" placeholder="Selecione ou envie um vídeo MP4" style="width: 100%; margin-bottom: 10px;" />
-        <button type="button" class="button upload_video_button_page" data-target="_fred_page_video">Enviar/Selecionar</button>
-    </p>
-
-    <script>
-        jQuery(document).ready(function($) {
-            function open_media_uploader(targetInput) {
-                let frame = wp.media({
-                    title: 'Selecionar vídeo (somente MP4)',
-                    button: {
-                        text: 'Usar este vídeo'
-                    },
-                    library: {
-                        type: 'video'
-                    },
-                    multiple: false
-                });
-                frame.on('select', function() {
-                    let attachment = frame.state().get('selection').first().toJSON();
-                    if (attachment.url.endsWith('.mp4')) {
-                        $('#' + targetInput).val(attachment.url);
-                    } else {
-                        alert('Por favor, envie um arquivo MP4.');
-                    }
-                });
-                frame.open();
-            }
-
-            $('.upload_video_button_page').on('click', function(e) {
-                e.preventDefault();
-                let targetInput = $(this).data('target');
-                open_media_uploader(targetInput);
-            });
-        });
-    </script>
-    <?php
+    fvs_render_stories_field($post->ID);
 }
 
 // === Salvar metadados da página ===
 add_action('save_post_page', 'fvp_save_video_upload_fields_page');
 function fvp_save_video_upload_fields_page($post_id)
 {
-    // Verificar nonce e permissões
-    if (!isset($_POST) || empty($_POST)) {
+    $data = fvs_read_stories_request($post_id);
+    if (null === $data) {
         return;
     }
-
-    // Salvar thumbnail do vídeo
-    if (isset($_POST['_fred_page_video_thumbnail'])) {
-        update_post_meta($post_id, '_fred_page_video_thumbnail', esc_url_raw($_POST['_fred_page_video_thumbnail']));
-    }
-
-    // Salvar vídeo principal
-    if (isset($_POST['_fred_page_video'])) {
-        update_post_meta($post_id, '_fred_page_video', esc_url_raw($_POST['_fred_page_video']));
-    }
+    fvs_save_stories_meta($post_id, $data);
 }
 
 // === FRONT: Bolinha de vídeo + lightbox para Páginas ===
