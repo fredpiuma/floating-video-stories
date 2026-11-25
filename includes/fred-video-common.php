@@ -5,6 +5,142 @@
  * Funções compartilhadas entre produtos e páginas
  */
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/** Número máximo de stories por post. */
+const FVS_MAX_STORIES = 20;
+
+/**
+ * Metas legadas (1.3.x) por tipo de post.
+ *
+ * @param string $post_type
+ * @return array{video:string,thumb:string}|null
+ */
+function fvs_legacy_meta_keys($post_type)
+{
+    $keys = array(
+        'product' => array('video' => '_fred_product_video', 'thumb' => '_fred_video_thumbnail'),
+        'page'    => array('video' => '_fred_page_video', 'thumb' => '_fred_page_video_thumbnail'),
+    );
+    return isset($keys[$post_type]) ? $keys[$post_type] : null;
+}
+
+/**
+ * Indica se a URL aponta para um arquivo .mp4 (ignora query string e fragmento).
+ *
+ * @param string $url
+ * @return bool
+ */
+function fvs_is_mp4_url($url)
+{
+    $path = wp_parse_url($url, PHP_URL_PATH);
+    return is_string($path) && '.mp4' === strtolower(substr($path, -4));
+}
+
+/**
+ * Normaliza uma lista de stories: aceita array ou JSON, limita a FVS_MAX_STORIES,
+ * aplica absint no id, esc_url_raw na url e descarta URLs que não sejam .mp4.
+ *
+ * @param mixed $raw
+ * @return array<int,array{id:int,url:string}>
+ */
+function fvs_sanitize_stories($raw)
+{
+    if (is_string($raw)) {
+        $raw = json_decode($raw, true);
+    }
+    if (!is_array($raw)) {
+        return array();
+    }
+
+    $stories = array();
+    foreach ($raw as $item) {
+        if (!is_array($item) || empty($item['url']) || !is_string($item['url'])) {
+            continue;
+        }
+        $url = esc_url_raw(trim($item['url']));
+        if ('' === $url || !fvs_is_mp4_url($url)) {
+            continue;
+        }
+        $stories[] = array(
+            'id'  => isset($item['id']) ? absint($item['id']) : 0,
+            'url' => $url,
+        );
+        if (count($stories) >= FVS_MAX_STORIES) {
+            break;
+        }
+    }
+    return $stories;
+}
+
+/**
+ * O post já foi salvo no formato de stories (1.4.0+)?
+ *
+ * @param int $post_id
+ * @return bool
+ */
+function fvs_uses_new_format($post_id)
+{
+    return metadata_exists('post', $post_id, '_fvs_stories')
+        || metadata_exists('post', $post_id, '_fvs_stories_cleared');
+}
+
+/**
+ * Lista de stories de um post, em ordem de exibição.
+ * Sem a meta nova, cai nas metas legadas (migração preguiçosa).
+ *
+ * @param int    $post_id
+ * @param string $context Contexto de exibição (padrão: tipo do post).
+ * @return array<int,array{id:int,url:string}>
+ */
+function fvs_get_stories($post_id, $context = '')
+{
+    $post_id = absint($post_id);
+    if (!$post_id) {
+        return array();
+    }
+    $post_type = get_post_type($post_id);
+    if ('' === $context) {
+        $context = (string) $post_type;
+    }
+
+    $stories = fvs_sanitize_stories(get_post_meta($post_id, '_fvs_stories', true));
+
+    if (empty($stories) && !fvs_uses_new_format($post_id)) {
+        $legacy = fvs_legacy_meta_keys($post_type);
+        if ($legacy) {
+            $url = esc_url_raw((string) get_post_meta($post_id, $legacy['video'], true));
+            if ('' !== $url) {
+                $stories = array(array('id' => 0, 'url' => $url));
+            }
+        }
+    }
+
+    return (array) apply_filters('fvs_stories', $stories, $post_id, $context);
+}
+
+/**
+ * URL configurada para a miniatura da bolha (pode ser vazia).
+ * Sem o formato novo, usa a miniatura legada.
+ *
+ * @param int $post_id
+ * @return string
+ */
+function fvs_get_bubble_thumb($post_id)
+{
+    $post_id = absint($post_id);
+    if (!$post_id) {
+        return '';
+    }
+    if (fvs_uses_new_format($post_id)) {
+        return esc_url_raw((string) get_post_meta($post_id, '_fvs_bubble_thumb', true));
+    }
+    $legacy = fvs_legacy_meta_keys(get_post_type($post_id));
+    return $legacy ? esc_url_raw((string) get_post_meta($post_id, $legacy['thumb'], true)) : '';
+}
+
 // Variável para controlar se o CSS já foi renderizado
 $fvp_styles_rendered = false;
 

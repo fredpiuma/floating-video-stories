@@ -98,12 +98,9 @@ function fvp_display_page_video_bubble()
     global $post;
     if (!$post) return;
 
-    // Lê as chaves personalizadas
-    $thumb_url = get_post_meta($post->ID, '_fred_page_video_thumbnail', true);
-    $video_url = get_post_meta($post->ID, '_fred_page_video', true);
+    $stories = fvs_get_stories($post->ID, 'page');
+    if (empty($stories)) return;
 
-    // Se estiverem vazias, não mostra nada
-    if (empty($thumb_url) || empty($video_url)) return;
-
-    fvp_render_video_bubble('page', $thumb_url, $video_url);
+    $thumb_url = fvs_get_bubble_thumb($post->ID);
+    fvp_render_video_bubble('page', $thumb_url ?: $stories[0]['url'], $stories[0]['url']);
 }

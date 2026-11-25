@@ -6,13 +6,25 @@
  * Author: Frederico de Castro
  * Author URI: https://www.fredericodecastro.com.br
  * Version: 1.3.2
+ * Text Domain: floating-video-stories
  */
 
-// Carrega as funcionalidades comuns (CSS e renderização)
-require_once plugin_dir_path(__FILE__) . 'includes/fred-video-common.php';
+if (!defined('ABSPATH')) {
+    exit;
+}
 
-// Carrega o módulo de vídeos para produtos
-require_once plugin_dir_path(__FILE__) . 'includes/fred-video-produtos.php';
+define('FVS_VERSION', '1.3.2');
+define('FVS_PATH', plugin_dir_path(__FILE__));
+define('FVS_URL', plugin_dir_url(__FILE__));
 
-// Carrega o módulo de vídeos para páginas
-require_once plugin_dir_path(__FILE__) . 'includes/fred-video-pages.php';
+// Funcionalidades comuns (dados, renderização e assets do front)
+require_once FVS_PATH . 'includes/fred-video-common.php';
+
+// Componente de administração (lista de stories)
+require_once FVS_PATH . 'includes/fred-video-admin-field.php';
+
+// Módulo de vídeos para produtos
+require_once FVS_PATH . 'includes/fred-video-produtos.php';
+
+// Módulo de vídeos para páginas
+require_once FVS_PATH . 'includes/fred-video-pages.php';

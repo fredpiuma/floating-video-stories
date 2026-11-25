@@ -81,12 +81,9 @@ function fvp_display_product_video_bubble()
     global $product;
     if (!$product || !is_a($product, 'WC_Product')) return;
 
-    // Lê as chaves personalizadas
-    $thumb_url = get_post_meta($product->get_id(), '_fred_video_thumbnail', true);
-    $video_url = get_post_meta($product->get_id(), '_fred_product_video', true);
+    $stories = fvs_get_stories($product->get_id(), 'product');
+    if (empty($stories)) return;
 
-    // Se estiverem vazias, não mostra nada
-    if (empty($thumb_url) || empty($video_url)) return;
-
-    fvp_render_video_bubble('product', $thumb_url, $video_url);
+    $thumb_url = fvs_get_bubble_thumb($product->get_id());
+    fvp_render_video_bubble('product', $thumb_url ?: $stories[0]['url'], $stories[0]['url']);
 }
