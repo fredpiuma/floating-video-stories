@@ -10,8 +10,9 @@ Plugin WordPress modular que exibe vídeos em uma bolha flutuante, com abertura 
 - **Bolha Flutuante**: exibe um vídeo em miniatura numa bolha fixa na tela (miniatura própria ou o primeiro vídeo)
 - **Migração automática**: produtos e páginas configurados na 1.3.x continuam funcionando sem ação manual
 - **Responsivo e acessível**: setas sobre o vídeo no celular, navegação por teclado (←, →, Esc) e foco devolvido à bolha
+- **Posição e tamanho configuráveis**: lado, distâncias, tamanho e camada da bolha, separados para desktop e mobile, com prévia ao vivo
 - **Leve**: CSS e JS só são carregados nas páginas que têm vídeo
-- **Extensível**: filtro `fvs_stories` e função `fvs_render_stories_bubble()` para outros tipos de conteúdo
+- **Extensível**: filtros `fvs_stories` e `fvs_bubble_settings` e função `fvs_render_stories_bubble()` para outros tipos de conteúdo
 
 ## 📋 Requisitos
 
@@ -69,13 +70,39 @@ O comportamento é idêntico ao dos produtos.
 
 Nada a fazer: o vídeo principal antigo aparece como o primeiro vídeo da lista, e a miniatura antiga continua na bolha. Ao salvar o produto ou a página, os dados passam para o formato novo. Os campos antigos são mantidos no banco, então dá para voltar à 1.3.x sem perder a configuração.
 
+## ⚙️ Configurações
+
+Em **Configurações › Floating Video Stories** (ou no link **Configurações** da linha do plugin, em Plugins) você define onde a bolha aparece e o tamanho dela. Só administradores (permissão `manage_options`) acessam a página.
+
+Há duas colunas, **Desktop** e **Mobile**, cada uma com uma prévia aproximada que acompanha os campos:
+
+| Campo | O que faz |
+|---|---|
+| **Lado** | Esquerda ou direita da tela |
+| **Distância da lateral** | Afastamento da borda escolhida, em px ou % da largura da tela |
+| **Medir a partir de** | Se a distância vertical conta a partir do topo ou da base da tela |
+| **Distância vertical** | Em px, % da altura ou % da largura da tela |
+| **Diâmetro** | Tamanho da bolha, em px (40–240) ou % da largura da tela (10–50) |
+| **Restaurar padrão** | Preenche os campos do dispositivo com os valores originais (ainda é preciso salvar) |
+
+Na seção **Avançado**:
+
+- **Largura de tela do mobile**: telas com até essa largura usam a coluna Mobile (e o layout de celular do player). Padrão: 640px; use 1024px para incluir tablets.
+- **Camada (z-index)**: aumente se a bolha ficar atrás de outro elemento flutuante, ou diminua se ela cobrir um menu. Padrão: 9999. O player sempre fica acima da bolha.
+
+> 💡 **Dica:** se o site já tem um botão de WhatsApp, carrinho ou chat num canto, coloque a bolha do **lado oposto**. Se mesmo assim houver sobreposição, ajuste a distância vertical ou o z-index.
+
+Valores fora dos limites são corrigidos ao salvar, com um aviso. Os padrões reproduzem o visual das versões anteriores, então quem atualiza não vê mudança até mexer nas configurações.
+
 ## 🎨 Interface do Usuário
 
 ### Bolha de Vídeo
-- **Desktop**: Círculo de 90px à esquerda, a 30% da base da tela
-- **Mobile**: Círculo de 27% da largura da tela, no canto inferior esquerdo; some temporariamente quando o teclado virtual abre
+- **Desktop (padrão)**: Círculo de 90px à esquerda, a 30% da altura da tela a partir da base
+- **Mobile (padrão)**: Círculo de 27% da largura da tela, no canto inferior esquerdo
+- Posição, tamanho e camada podem ser mudados em **Configurações › Floating Video Stories** (veja a seção ⚙️ Configurações)
+- **Teclado virtual**: a bolha sai temporariamente pelo lado em que está
 - **Hover**: Aumenta 8% com efeito suave
-- **X na bolha**: Esconde a bolha
+- **X na bolha**: Esconde a bolha. Fica no canto superior do lado da borda da tela e tem no mínimo 24px
 
 ### Player stories
 - **Barras no topo**: uma por vídeo; a atual enche conforme o vídeo avança
@@ -92,7 +119,8 @@ Nada a fazer: o vídeo principal antigo aparece como o primeiro vídeo da lista,
 floating-video-stories/
 ├── fred-video-produto.php              # Plugin principal (loader, constantes FVS_*)
 ├── includes/
-│   ├── fred-video-common.php           # Dados (fvs_get_stories), render e assets do front
+│   ├── fred-video-common.php           # Dados (fvs_get_stories), render, assets e CSS gerado da bolha
+│   ├── fred-video-settings.php         # Configurações: padrões, sanitização, página e link em Plugins
 │   ├── fred-video-admin-field.php      # Campo de stories do admin (render, save, assets)
 │   ├── fred-video-produtos.php         # Aba "Vídeos (stories)" do produto WooCommerce
 │   └── fred-video-pages.php            # Meta box "Vídeos da Página"
@@ -100,7 +128,10 @@ floating-video-stories/
 │   ├── css/fvs-front.css               # Bolha e player stories
 │   ├── js/fvs-front.js                 # Player stories (JS puro)
 │   ├── css/fvs-admin.css               # Estilo do campo no admin
-│   └── js/fvs-admin.js                 # wp.media + lista ordenável
+│   ├── js/fvs-admin.js                 # wp.media + lista ordenável
+│   ├── css/fvs-settings.css            # Página de configurações
+│   └── js/fvs-settings.js              # Prévia ao vivo e "Restaurar padrão"
+├── uninstall.php                       # Apaga a option fvs_settings (mantém os vídeos)
 ├── .github/workflows/release.yml       # Gera e anexa o zip a cada release publicado
 └── README.md                           # Este arquivo
 ```
@@ -113,7 +144,7 @@ Os vídeos ficam na meta `_fvs_stories` (lista de `['id' => ID do anexo, 'url' =
 
 - `fvs_get_stories( $post_id, $context = '' )`: lista de stories (passa pelo filtro `fvs_stories`)
 - `fvs_get_bubble_thumb( $post_id )`: URL da miniatura configurada (vazia = usa o primeiro vídeo)
-- `fvs_render_stories_bubble( $type, $thumb_url, $stories )`: imprime a bolha e o player e carrega o CSS/JS
+- `fvs_render_stories_bubble( $type, $thumb_url, $stories, $post_id = 0 )`: imprime a bolha e o player e carrega o CSS/JS
 
 Exemplo para posts do blog, reaproveitando o campo do admin:
 ```php
@@ -157,6 +188,23 @@ add_filter('fvs_stories', function ($stories, $post_id, $context) {
 ```
 
 A função antiga `fvp_render_video_bubble( $type, $thumb_url, $video_url )` continua disponível e exibe o vídeo como um player de um story só.
+
+### Mudar posição e tamanho da bolha por código
+
+As configurações ficam na option `fvs_settings` e são lidas por `fvs_get_settings()`, que sempre devolve todas as chaves (com os padrões de `fvs_default_settings()`). Antes de gerar o CSS, elas passam pelo filtro `fvs_bubble_settings( $settings, $context, $post_id )`, e o resultado é validado de novo, então valores inválidos voltam ao padrão.
+
+Chaves por dispositivo (`desktop_` ou `mobile_`): `side` (`left`/`right`), `offset_x` + `offset_x_unit` (`px`/`%`), `anchor` (`top`/`bottom`), `offset_y` + `offset_y_unit` (`px`/`%h`/`%w`), `size` + `size_unit` (`px`/`%`). Globais: `breakpoint` e `z_index`.
+
+Exemplo: bolha à direita só nos produtos da categoria "promocoes":
+```php
+add_filter('fvs_bubble_settings', function ($settings, $context, $post_id) {
+    if ('product' === $context && has_term('promocoes', 'product_cat', $post_id)) {
+        $settings['desktop_side'] = 'right';
+        $settings['mobile_side']  = 'right';
+    }
+    return $settings;
+}, 10, 3);
+```
 
 ### Testar Localmente
 

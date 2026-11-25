@@ -5,7 +5,7 @@
  * Description: Plugin para adicionar vídeos aos produtos WooCommerce e páginas.
  * Author: Frederico de Castro
  * Author URI: https://www.fredericodecastro.com.br/links
- * Version: 1.4.2
+ * Version: 1.5.0
  * Text Domain: floating-video-stories
  */
 
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('FVS_VERSION', '1.4.2');
+define('FVS_VERSION', '1.5.0');
 define('FVS_PATH', plugin_dir_path(__FILE__));
 define('FVS_URL', plugin_dir_url(__FILE__));
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0] - 2026-11-25
+
+- Nova página **Configurações › Floating Video Stories** (também acessível pelo link "Configurações" na lista de plugins), para escolher **separadamente no computador e no celular**:
+  - o **lado** da bolha (esquerda ou direita) e a distância da lateral;
+  - se a distância vertical é medida a partir do **topo** ou da **base** da tela;
+  - o **tamanho** da bolha, em px ou em % da largura da tela.
+- Seção **Avançado**: a **largura de tela** a partir da qual vale a configuração de celular (padrão 640px; use 1024px para incluir tablets) e a **camada (z-index)**, para resolver sobreposição com botões de WhatsApp, carrinho ou chat. O player de vídeo continua sempre acima da bolha.
+- **Prévia ao vivo** da posição e do tamanho em cada dispositivo, e botão **Restaurar padrão** por dispositivo.
+- Com a bolha à direita, o X de fechar fica no canto direito e a bolha sai pela direita quando o teclado do celular abre.
+- O X da bolha agora acompanha o tamanho dela e nunca fica menor que 24px, para continuar fácil de tocar.
+- **Nada muda para quem não alterar as configurações:** os valores padrão reproduzem a posição e o tamanho das versões anteriores.
+- Ao desinstalar o plugin, as configurações são apagadas; os vídeos dos produtos e páginas são mantidos.
+- Para desenvolvedores: filtro `fvs_bubble_settings` para mudar posição e tamanho por produto ou página via código.
+
 ## [1.4.2] - 2026-11-24
 
 - README: o comando de instalação pelo WP-CLI agora já inclui `--force`, então o mesmo comando instala e atualiza o plugin.
