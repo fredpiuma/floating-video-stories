@@ -20,14 +20,27 @@ Plugin WordPress modular que exibe vídeos em uma bolha flutuante, com abertura 
 
 ## 🚀 Instalação
 
-1. Clone o repositório para a pasta de plugins:
+**[Baixar o plugin (zip da última versão)](https://github.com/fredpiuma/floating-video-stories/releases/latest/download/floating-video-stories.zip)**
+
+Esse zip tem só os arquivos do plugin. Não use o "Source code (zip)" do GitHub para instalar: ele traz arquivos de desenvolvimento e a pasta fica com o nome errado.
+
+### Pelo painel do WordPress
+
+1. Baixe o zip pelo link acima.
+2. Em **Plugins → Adicionar novo → Enviar plugin**, escolha o arquivo e clique em **Instalar agora**.
+3. Ative o **Fred Video Produtos e Páginas**.
+
+Para atualizar, envie o zip da versão nova da mesma forma e confirme a substituição da versão instalada.
+
+### Pelo WP-CLI
+
 ```bash
-git clone https://github.com/fredpiuma/floating-video-stories.git wp-content/plugins/floating-video-stories
+wp plugin install https://github.com/fredpiuma/floating-video-stories/releases/latest/download/floating-video-stories.zip --activate
 ```
 
-2. Ative o plugin no painel administrativo do WordPress em **Plugins**
+Para atualizar para a última versão, rode o mesmo comando com `--force`.
 
-3. Pronto! Os campos de vídeo aparecerão automaticamente nos produtos e páginas
+Requer WordPress 5.0+ e PHP 7.2+. A parte de produtos requer WooCommerce 3.0+.
 
 ## 📖 Como Usar
 
@@ -81,6 +94,8 @@ floating-video-stories/
 │   ├── fred-video-common.php           # Código compartilhado (CSS, JS, rendering)
 │   ├── fred-video-produtos.php         # Funcionalidade WooCommerce
 │   └── fred-video-pages.php            # Funcionalidade de páginas
+├── tools/build-zip.sh                  # Gera o zip de instalação em dist/
+├── .github/workflows/release.yml       # Anexa o zip a cada release publicado
 └── README.md                           # Este arquivo
 ```
 
@@ -142,14 +157,7 @@ define('WP_DEBUG_LOG', true);
 
 ## 📝 Notas de Versão
 
-### v2.0 (Atual)
-- ✨ Adicionado suporte a vídeos em páginas
-- 🔧 Refatorado em arquitetura modular
-- 📦 Separado funcionalidade de produtos e páginas
-- 🎯 IDs DOM únicos para evitar conflitos
-
-### v1.2
-- 🎬 Versão inicial com suporte a produtos WooCommerce
+Veja o [CHANGELOG.md](CHANGELOG.md) e os [releases](https://github.com/fredpiuma/floating-video-stories/releases).
 
 ## 📄 Licença
 
@@ -161,6 +169,8 @@ Contribuições são bem-vindas! Se encontrar bugs ou tiver sugestões, sinta-se
 1. Abrir uma issue
 2. Fazer um fork e enviar um pull request
 3. Entrar em contato com o autor
+
+**Lançar uma versão:** siga o processo da seção "Versões e releases" do [AGENTS.md](AGENTS.md).
 
 ## 📚 Recursos Adicionais
 
