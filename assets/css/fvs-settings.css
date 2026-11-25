@@ -1,0 +1,193 @@
+/* Floating Video Stories - página de configurações */
+
+.fvs-settings .fvs-intro {
+    max-width: 760px;
+    font-size: 14px;
+}
+
+.fvs-devices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+    .fvs-devices {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 640px;
+    }
+}
+
+.fvs-device {
+    padding: 4px 20px 16px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+}
+
+.fvs-device-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.fvs-device-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0;
+}
+
+.fvs-device h3 {
+    margin: 20px 0 8px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #50575e;
+}
+
+.fvs-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin: 10px 0;
+}
+
+.fvs-label {
+    flex: 0 0 150px;
+    font-weight: 600;
+}
+
+.fvs-number-unit {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.fvs-number-unit input[type="number"] {
+    width: 80px;
+}
+
+.fvs-choices {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.fvs-choice {
+    position: relative;
+}
+
+.fvs-choice input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.fvs-choice > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.fvs-choice input:checked + span {
+    border-color: #2271b1;
+    background: #2271b1;
+    color: #fff;
+}
+
+.fvs-choice input:focus-visible + span {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+.fvs-choice .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* ===== Prévia ===== */
+
+.fvs-preview {
+    margin: 16px 0 0;
+    text-align: center;
+}
+
+.fvs-preview figcaption {
+    margin-top: 6px;
+    color: #646970;
+    font-size: 12px;
+}
+
+.fvs-screen {
+    position: relative;
+    margin: 0 auto;
+    overflow: hidden;
+    background:
+        linear-gradient(#dcdcde, #dcdcde) 10% 10% / 80% 8px no-repeat,
+        linear-gradient(#e7e7e9, #e7e7e9) 10% 22% / 55% 6px no-repeat,
+        linear-gradient(#e7e7e9, #e7e7e9) 10% 30% / 65% 6px no-repeat,
+        #f6f7f7;
+    border: 6px solid #1d2327;
+}
+
+.fvs-screen--desktop {
+    width: 320px;
+    aspect-ratio: 16 / 10;
+    border-radius: 6px;
+}
+
+.fvs-screen--mobile {
+    width: 180px;
+    aspect-ratio: 9 / 19;
+    border-radius: 18px;
+}
+
+.fvs-preview-bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f0b849, #d63638 55%, #8c1d6b);
+    box-shadow: 0 0 6px rgba(0, 0, 0, .35);
+    transition: all .15s ease;
+}
+
+.fvs-preview-close {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+}
+
+.fvs-preview-close::before,
+.fvs-preview-close::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 25%;
+    width: 50%;
+    height: 1px;
+    background: #000;
+    transform: rotate(45deg);
+}
+
+.fvs-preview-close::after {
+    transform: rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fvs-preview-bubble {
+        transition: none;
+    }
+}

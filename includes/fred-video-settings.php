@@ -204,3 +204,226 @@ function fvs_register_settings()
         'default'           => fvs_default_settings(),
     ));
 }
+
+// === Página de configurações (Configurações › Floating Video Stories) ===
+
+/** Slug da página de configurações. */
+const FVS_SETTINGS_PAGE = 'floating-video-stories';
+
+add_action('admin_menu', 'fvs_add_settings_page');
+function fvs_add_settings_page()
+{
+    $hook = add_options_page(
+        __('Floating Video Stories', 'floating-video-stories'),
+        __('Floating Video Stories', 'floating-video-stories'),
+        'manage_options',
+        FVS_SETTINGS_PAGE,
+        'fvs_render_settings_page'
+    );
+    if ($hook) {
+        add_action('admin_enqueue_scripts', function ($current) use ($hook) {
+            if ($current === $hook) {
+                fvs_enqueue_settings_assets();
+            }
+        });
+    }
+}
+
+add_filter('plugin_action_links_' . plugin_basename(FVS_PATH . 'fred-video-produto.php'), 'fvs_plugin_action_links');
+function fvs_plugin_action_links($links)
+{
+    if (current_user_can('manage_options')) {
+        $url = admin_url('options-general.php?page=' . FVS_SETTINGS_PAGE);
+        array_unshift($links, '<a href="' . esc_url($url) . '">' . esc_html__('Configurações', 'floating-video-stories') . '</a>');
+    }
+    return $links;
+}
+
+function fvs_enqueue_settings_assets()
+{
+    wp_enqueue_style('fvs-settings', FVS_URL . 'assets/css/fvs-settings.css', array(), FVS_VERSION);
+    wp_enqueue_script('fvs-settings', FVS_URL . 'assets/js/fvs-settings.js', array(), FVS_VERSION, true);
+
+    $limits = array();
+    foreach (fvs_settings_schema() as $field => $rule) {
+        if (isset($rule['units'])) {
+            $limits[$field] = $rule['units'];
+        }
+    }
+    wp_localize_script('fvs-settings', 'fvsSettings', array(
+        'defaults'    => fvs_default_settings(),
+        'limits'      => $limits,
+        'mobileUntil' => __('Vale para telas de até %spx de largura.', 'floating-video-stories'),
+    ));
+}
+
+/**
+ * Opções de unidade de cada campo numérico.
+ *
+ * @param string $field offset_x, offset_y ou size.
+ * @return array<string,string>
+ */
+function fvs_settings_unit_labels($field)
+{
+    $px     = __('px', 'floating-video-stories');
+    $width  = __('% da largura da tela', 'floating-video-stories');
+    $height = __('% da altura da tela', 'floating-video-stories');
+
+    switch ($field) {
+        case 'offset_y':
+            return array('px' => $px, '%h' => $height, '%w' => $width);
+        default:
+            return array('px' => $px, '%' => $width);
+    }
+}
+
+/**
+ * Campo numérico com seletor de unidade.
+ *
+ * @param array  $s
+ * @param string $device
+ * @param string $field
+ */
+function fvs_render_number_with_unit(array $s, $device, $field)
+{
+    $key    = $device . '_' . $field;
+    $unit   = $s[$key . '_unit'];
+    $schema = fvs_settings_schema();
+    list($min, $max) = $schema[$field]['units'][$unit];
+    ?>
+    <span class="fvs-number-unit">
+        <input type="number" id="fvs-<?php echo esc_attr($key); ?>" name="<?php echo esc_attr(FVS_SETTINGS_OPTION . '[' . $key . ']'); ?>" value="<?php echo esc_attr($s[$key]); ?>" min="<?php echo esc_attr($min); ?>" max="<?php echo esc_attr($max); ?>" step="0.1" class="small-text" data-fvs-field="<?php echo esc_attr($field); ?>" required>
+        <select name="<?php echo esc_attr(FVS_SETTINGS_OPTION . '[' . $key . '_unit]'); ?>" data-fvs-unit-for="<?php echo esc_attr($field); ?>" aria-label="<?php esc_attr_e('Unidade', 'floating-video-stories'); ?>">
+            <?php foreach (fvs_settings_unit_labels($field) as $value => $label) : ?>
+                <option value="<?php echo esc_attr($value); ?>" <?php selected($unit, $value); ?>><?php echo esc_html($label); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </span>
+    <?php
+}
+
+/**
+ * Grupo de botões de rádio.
+ *
+ * @param array  $s
+ * @param string $key
+ * @param array  $choices valor => rótulo (HTML já escapado).
+ */
+function fvs_render_radio_group(array $s, $key, array $choices)
+{
+    foreach ($choices as $value => $label) {
+        printf(
+            '<label class="fvs-choice"><input type="radio" name="%1$s" value="%2$s" %3$s><span>%4$s</span></label>',
+            esc_attr(FVS_SETTINGS_OPTION . '[' . $key . ']'),
+            esc_attr($value),
+            checked($s[$key], $value, false),
+            $label // phpcs:ignore WordPress.Security.EscapeOutput -- montado com esc_html abaixo
+        );
+    }
+}
+
+function fvs_render_settings_page()
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $s       = fvs_get_settings();
+    $devices = array(
+        'desktop' => array('label' => __('Desktop', 'floating-video-stories'), 'icon' => 'dashicons-desktop'),
+        'mobile'  => array('label' => __('Mobile', 'floating-video-stories'), 'icon' => 'dashicons-smartphone'),
+    );
+    ?>
+    <div class="wrap fvs-settings">
+        <h1><?php esc_html_e('Floating Video Stories', 'floating-video-stories'); ?></h1>
+        <p class="fvs-intro"><?php esc_html_e('Escolha onde a bolha de vídeo aparece e o tamanho dela, separadamente no computador e no celular. Útil quando o site já tem outros botões flutuantes, como WhatsApp, carrinho ou chat.', 'floating-video-stories'); ?></p>
+
+        <form method="post" action="options.php">
+            <?php settings_fields('fvs_settings_group'); ?>
+
+            <div class="fvs-devices">
+                <?php foreach ($devices as $device => $info) : ?>
+                    <section class="fvs-device" data-fvs-device="<?php echo esc_attr($device); ?>">
+                        <header class="fvs-device-header">
+                            <h2><span class="dashicons <?php echo esc_attr($info['icon']); ?>" aria-hidden="true"></span> <?php echo esc_html($info['label']); ?></h2>
+                            <button type="button" class="button button-link fvs-reset"><?php esc_html_e('Restaurar padrão', 'floating-video-stories'); ?></button>
+                        </header>
+
+                        <figure class="fvs-preview">
+                            <div class="fvs-screen fvs-screen--<?php echo esc_attr($device); ?>" aria-hidden="true">
+                                <span class="fvs-preview-bubble"><span class="fvs-preview-close"></span></span>
+                            </div>
+                            <figcaption>
+                                <?php esc_html_e('Prévia aproximada', 'floating-video-stories'); ?>
+                                <?php if ('mobile' === $device) : ?>
+                                    · <span class="fvs-mobile-until"><?php echo esc_html(sprintf(__('Vale para telas de até %spx de largura.', 'floating-video-stories'), $s['breakpoint'])); ?></span>
+                                <?php endif; ?>
+                            </figcaption>
+                        </figure>
+
+                        <h3><?php esc_html_e('Posição', 'floating-video-stories'); ?></h3>
+                        <div class="fvs-row">
+                            <span class="fvs-label" id="fvs-<?php echo esc_attr($device); ?>-side-label"><?php esc_html_e('Lado', 'floating-video-stories'); ?></span>
+                            <div class="fvs-choices" role="radiogroup" aria-labelledby="fvs-<?php echo esc_attr($device); ?>-side-label">
+                                <?php
+                                fvs_render_radio_group($s, $device . '_side', array(
+                                    'left'  => '<span class="dashicons dashicons-arrow-left-alt" aria-hidden="true"></span> ' . esc_html__('Esquerda', 'floating-video-stories'),
+                                    'right' => esc_html__('Direita', 'floating-video-stories') . ' <span class="dashicons dashicons-arrow-right-alt" aria-hidden="true"></span>',
+                                ));
+                                ?>
+                            </div>
+                        </div>
+                        <div class="fvs-row">
+                            <label class="fvs-label" for="fvs-<?php echo esc_attr($device); ?>_offset_x"><?php esc_html_e('Distância da lateral', 'floating-video-stories'); ?></label>
+                            <?php fvs_render_number_with_unit($s, $device, 'offset_x'); ?>
+                        </div>
+                        <div class="fvs-row">
+                            <span class="fvs-label" id="fvs-<?php echo esc_attr($device); ?>-anchor-label"><?php esc_html_e('Medir a partir de', 'floating-video-stories'); ?></span>
+                            <div class="fvs-choices" role="radiogroup" aria-labelledby="fvs-<?php echo esc_attr($device); ?>-anchor-label">
+                                <?php
+                                fvs_render_radio_group($s, $device . '_anchor', array(
+                                    'top'    => '<span class="dashicons dashicons-arrow-up-alt" aria-hidden="true"></span> ' . esc_html__('Topo', 'floating-video-stories'),
+                                    'bottom' => '<span class="dashicons dashicons-arrow-down-alt" aria-hidden="true"></span> ' . esc_html__('Base', 'floating-video-stories'),
+                                ));
+                                ?>
+                            </div>
+                        </div>
+                        <div class="fvs-row">
+                            <label class="fvs-label" for="fvs-<?php echo esc_attr($device); ?>_offset_y"><?php esc_html_e('Distância vertical', 'floating-video-stories'); ?></label>
+                            <?php fvs_render_number_with_unit($s, $device, 'offset_y'); ?>
+                        </div>
+                        <p class="description"><?php esc_html_e('Dica: se o site tem botão de WhatsApp ou carrinho num canto, coloque a bolha do lado oposto.', 'floating-video-stories'); ?></p>
+
+                        <h3><?php esc_html_e('Tamanho', 'floating-video-stories'); ?></h3>
+                        <div class="fvs-row">
+                            <label class="fvs-label" for="fvs-<?php echo esc_attr($device); ?>_size"><?php esc_html_e('Diâmetro', 'floating-video-stories'); ?></label>
+                            <?php fvs_render_number_with_unit($s, $device, 'size'); ?>
+                        </div>
+                        <p class="description"><?php esc_html_e('Em % da largura da tela, a bolha acompanha o tamanho do aparelho.', 'floating-video-stories'); ?></p>
+                    </section>
+                <?php endforeach; ?>
+            </div>
+
+            <h2><?php esc_html_e('Avançado', 'floating-video-stories'); ?></h2>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="fvs-breakpoint"><?php esc_html_e('Largura de tela do mobile', 'floating-video-stories'); ?></label></th>
+                    <td>
+                        <input type="number" id="fvs-breakpoint" name="<?php echo esc_attr(FVS_SETTINGS_OPTION . '[breakpoint]'); ?>" value="<?php echo esc_attr($s['breakpoint']); ?>" min="320" max="1200" step="1" class="small-text" required> px
+                        <p class="description"><?php esc_html_e('Telas com até esta largura usam a configuração de mobile (vale também para o layout do player). Padrão: 640px. Use 1024px para incluir tablets.', 'floating-video-stories'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="fvs-z_index"><?php esc_html_e('Camada (z-index)', 'floating-video-stories'); ?></label></th>
+                    <td>
+                        <input type="number" id="fvs-z_index" name="<?php echo esc_attr(FVS_SETTINGS_OPTION . '[z_index]'); ?>" value="<?php echo esc_attr($s['z_index']); ?>" min="1" max="2147483000" step="1" class="regular-text" required>
+                        <p class="description"><?php esc_html_e('Aumente se a bolha ficar atrás de outro elemento flutuante, ou diminua se ela cobrir um menu. Padrão: 9999. O player de vídeo sempre fica acima da bolha.', 'floating-video-stories'); ?></p>
+                    </td>
+                </tr>
+            </table>
+
+            <?php submit_button(); ?>
+        </form>
+    </div>
+    <?php
+}
