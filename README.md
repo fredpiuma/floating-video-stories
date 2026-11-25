@@ -94,8 +94,7 @@ floating-video-stories/
 │   ├── fred-video-common.php           # Código compartilhado (CSS, JS, rendering)
 │   ├── fred-video-produtos.php         # Funcionalidade WooCommerce
 │   └── fred-video-pages.php            # Funcionalidade de páginas
-├── tools/build-zip.sh                  # Gera o zip de instalação em dist/
-├── .github/workflows/release.yml       # Anexa o zip a cada release publicado
+├── .github/workflows/release.yml       # Gera e anexa o zip a cada release publicado
 └── README.md                           # Este arquivo
 ```
 

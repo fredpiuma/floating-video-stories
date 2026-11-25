@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.2] - 2026-11-24
+
+- O zip de instalação passou a ser gerado só no GitHub, a cada release. Nenhuma mudança no funcionamento do plugin.
+
 ## [1.3.1] - 2026-11-24
 
 - Instruções de instalação no README (zip do último release e WP-CLI).

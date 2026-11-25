@@ -7,6 +7,10 @@ on:
 permissions:
   contents: write
 
+env:
+  SLUG: floating-video-stories   # nome da pasta dentro do zip
+  MAIN: fred-video-produto.php   # arquivo com o cabeçalho "Plugin Name:"
+
 jobs:
   zip:
     runs-on: ubuntu-latest
@@ -20,28 +24,36 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
         run: |
           WANTED="${TAG#v}"
-          HEADER="$(sed -n 's/^[ *]*Version: *//p' fred-video-produto.php | head -1 | tr -d '\r ')"
+          HEADER="$(sed -n 's/^[ *]*Version: *//p' "$MAIN" | head -1 | tr -d '\r ')"
           echo "tag=$WANTED cabeçalho=$HEADER"
           for v in "$HEADER"; do
             [ "$v" = "$WANTED" ] || { echo "A versão da tag ($WANTED) não bate com a do código ($v)." >&2; exit 1; }
           done
 
       - name: Gerar o zip
-        run: tools/build-zip.sh
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          EXCLUDE=(.github tools docs tests node_modules CLAUDE.md AGENTS.md GEMINI.md README.md CHANGELOG.md .gitignore .gitattributes)
+          PATHSPEC=(.)
+          for p in "${EXCLUDE[@]}"; do PATHSPEC+=(":(exclude)$p"); done
+          mkdir -p out
+          git archive --format=zip --prefix="$SLUG/" -o "out/$SLUG-${TAG#v}.zip" HEAD -- "${PATHSPEC[@]}"
+          cp "out/$SLUG-${TAG#v}.zip" "out/$SLUG.zip"
 
       - name: Conferir o conteúdo do zip
         run: |
-          unzip -Z1 dist/floating-video-stories.zip > lista.txt
-          if grep -v '^floating-video-stories/' lista.txt | grep -q .; then
-            echo "O zip tem arquivos fora da pasta floating-video-stories/" >&2; exit 1
+          unzip -Z1 "out/$SLUG.zip" > lista.txt
+          if grep -v "^$SLUG/" lista.txt | grep -q .; then
+            echo "O zip tem arquivos fora da pasta $SLUG/" >&2; exit 1
           fi
-          if grep -E '^floating-video-stories/(\.github/|tools/|docs/|CLAUDE\.md|AGENTS\.md|GEMINI\.md|README\.md|CHANGELOG\.md)' lista.txt; then
+          if grep -E "^$SLUG/(\.github/|tools/|docs/|CLAUDE\.md|AGENTS\.md|GEMINI\.md|README\.md|CHANGELOG\.md)" lista.txt; then
             echo "O zip tem arquivos de desenvolvimento" >&2; exit 1
           fi
-          grep -q '^floating-video-stories/fred-video-produto.php$' lista.txt
+          grep -qx "$SLUG/$MAIN" lista.txt
 
       - name: Anexar os zips ao release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$TAG" dist/floating-video-stories.zip dist/floating-video-stories-*.zip --clobber
+        run: gh release upload "$TAG" out/*.zip --clobber
