@@ -1,6 +1,6 @@
-# Plugin Wordpress - Fred Videos - Produtos e Páginas
+# Floating Video Stories for WooCommerce
 
-Um plugin WordPress modular para adicionar vídeos em produtos WooCommerce e páginas estáticas.
+Plugin WordPress modular que exibe vídeos em uma bolha flutuante, com abertura em lightbox, em produtos WooCommerce e páginas estáticas.
 
 ## 🎥 Funcionalidades
 
@@ -22,7 +22,7 @@ Um plugin WordPress modular para adicionar vídeos em produtos WooCommerce e pá
 
 1. Clone o repositório para a pasta de plugins:
 ```bash
-git clone https://github.com/fredpiuma/wordpress-plugin-video.git wp-content/plugins/fred-video-produto
+git clone https://github.com/fredpiuma/floating-video-stories.git wp-content/plugins/floating-video-stories
 ```
 
 2. Ative o plugin no painel administrativo do WordPress em **Plugins**
@@ -75,7 +75,7 @@ O comportamento é idêntico ao dos produtos.
 ## 📁 Estrutura do Projeto
 
 ```
-fred-video-produto/
+floating-video-stories/
 ├── fred-video-produto.php              # Plugin principal (loader)
 ├── includes/
 │   ├── fred-video-common.php           # Código compartilhado (CSS, JS, rendering)
@@ -151,11 +151,6 @@ define('WP_DEBUG_LOG', true);
 ### v1.2
 - 🎬 Versão inicial com suporte a produtos WooCommerce
 
-## 👨‍💻 Autor
-
-**Frederico de Castro**
-- Website: https://www.fredericodecastro.com.br
-
 ## 📄 Licença
 
 Este plugin é fornecido como está. Sinta-se livre para usar, modificar e distribuir.
@@ -172,3 +167,17 @@ Contribuições são bem-vindas! Se encontrar bugs ou tiver sugestões, sinta-se
 - [WordPress Plugin Development](https://developer.wordpress.org/plugins/)
 - [WooCommerce Product Hooks](https://woocommerce.com/document/hooks/)
 - [HTML5 Video Element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video)
+
+---
+
+### Precisa de uma solução sob medida para a sua loja?
+
+Desenvolvo plugins, integrações e melhorias para WordPress e WooCommerce, do checkout ao pós-venda. Me conte o que você precisa e vamos encontrar o melhor caminho para o seu projeto.
+
+**Frederico de Castro** · Senior Web Developer & Software Architect
+
+[![Fale comigo no WhatsApp](https://img.shields.io/badge/Fale_comigo_no_WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/5511914636944)
+[![E-mail](https://img.shields.io/badge/E--mail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:contato@fredericodecastro.com.br)
+[![Site](https://img.shields.io/badge/Site-1F2937?style=for-the-badge&logo=googlechrome&logoColor=white)](https://www.fredericodecastro.com.br/links/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge)](https://www.linkedin.com/in/fredericodecastro/)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/fredericomdecastro)
