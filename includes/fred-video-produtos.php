@@ -54,5 +54,5 @@ function fvp_display_product_video_bubble()
     $stories = fvs_get_stories($product->get_id(), 'product');
     if (empty($stories)) return;
 
-    fvs_render_stories_bubble('product', fvs_get_bubble_thumb($product->get_id()), $stories);
+    fvs_render_stories_bubble('product', fvs_get_bubble_thumb($product->get_id()), $stories, $product->get_id());
 }

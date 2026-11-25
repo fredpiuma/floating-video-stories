@@ -185,18 +185,121 @@ function fvs_register_front_assets()
     ));
 
     // Carrega no <head> quando já se sabe que haverá bolha; evita o carregamento tardio do CSS.
-    if (fvs_current_post_with_stories()) {
-        fvs_enqueue_front_assets();
+    $post_id = fvs_current_post_with_stories();
+    if ($post_id) {
+        fvs_enqueue_front_assets('product' === get_post_type($post_id) ? 'product' : 'page', $post_id);
     }
 }
 
-function fvs_enqueue_front_assets()
+/**
+ * Enfileira CSS e JS do front e, uma vez por página, o CSS de posição e tamanho da bolha.
+ *
+ * @param string $context 'product', 'page' ou outro (repassado ao filtro `fvs_bubble_settings`).
+ * @param int    $post_id
+ */
+function fvs_enqueue_front_assets($context = '', $post_id = 0)
 {
+    static $inline_added = false;
+
     if (!wp_style_is('fvs-front', 'registered')) {
         fvs_register_front_assets();
     }
     wp_enqueue_style('fvs-front');
     wp_enqueue_script('fvs-front');
+
+    if (!$inline_added) {
+        $inline_added = true;
+        wp_add_inline_style('fvs-front', fvs_build_bubble_css(fvs_get_bubble_settings($context, $post_id)));
+    }
+}
+
+/**
+ * Formata um número para o CSS (1 casa decimal, ponto como separador).
+ *
+ * @param float|int $value
+ * @return string
+ */
+function fvs_css_number($value)
+{
+    return number_format((float) $value, 1, '.', '');
+}
+
+/**
+ * Converte a unidade das configurações para a unidade CSS.
+ *
+ * @param string $unit px, %, %h ou %w.
+ * @return string
+ */
+function fvs_css_unit($unit)
+{
+    $map = array('px' => 'px', '%' => 'vw', '%h' => 'vh', '%w' => 'vw');
+    return isset($map[$unit]) ? $map[$unit] : 'px';
+}
+
+/**
+ * Declarações da bolha para um dispositivo.
+ *
+ * @param array  $s      Configurações já validadas.
+ * @param string $device desktop ou mobile.
+ * @return string CSS (várias regras).
+ */
+function fvs_build_device_bubble_css(array $s, $device)
+{
+    $side   = 'right' === $s[$device . '_side'] ? 'right' : 'left';
+    $other  = 'right' === $side ? 'left' : 'right';
+    $anchor = 'top' === $s[$device . '_anchor'] ? 'top' : 'bottom';
+    $vother = 'top' === $anchor ? 'bottom' : 'top';
+
+    $x    = fvs_css_number($s[$device . '_offset_x']) . fvs_css_unit($s[$device . '_offset_x_unit']);
+    $y    = fvs_css_number($s[$device . '_offset_y']) . fvs_css_unit($s[$device . '_offset_y_unit']);
+    $size = fvs_css_number($s[$device . '_size']) . fvs_css_unit($s[$device . '_size_unit']);
+
+    // Proporção do X em relação à bolha: a mesma das versões anteriores em cada dispositivo.
+    $close  = 'mobile' === $device ? 'var(--fvs-size) * 7 / 27' : 'var(--fvs-size) / 3';
+    $offset = 'mobile' === $device ? 'var(--fvs-size) * -2 / 27' : 'var(--fvs-size) / -9';
+
+    $css  = '.fvs-bubble-wrapper{' . $side . ':' . $x . ';' . $other . ':auto;' . $anchor . ':' . $y . ';' . $vother . ':auto;';
+    $css .= '--fvs-size:' . $size . ';--fvs-dir:' . ('right' === $side ? '1' : '-1') . ';';
+    $css .= '--fvs-close:max(24px,calc(' . $close . '));--fvs-close-offset:calc(' . $offset . ');}';
+
+    // O X fica no canto superior do lado da borda da tela (espelhado quando a bolha está à direita).
+    $margin = 'right' === $side
+        ? 'var(--fvs-close-offset) var(--fvs-close-offset) 0 0'
+        : 'var(--fvs-close-offset) 0 0 var(--fvs-close-offset)';
+    $css .= '.fvs-ui .fvs-bubble-close,.fvs-ui .fvs-bubble-close:hover,.fvs-ui .fvs-bubble-close:focus{'
+        . $side . ':0;' . $other . ':auto;margin:' . $margin . ';}';
+
+    return $css;
+}
+
+/**
+ * CSS de posição, tamanho e camada da bolha, e das regras do player que dependem da largura do mobile.
+ * Só usa valores já validados por fvs_normalize_settings().
+ *
+ * @param array $s
+ * @return string
+ */
+function fvs_build_bubble_css(array $s)
+{
+    $s          = fvs_normalize_settings($s);
+    $z          = (int) $s['z_index'];
+    $breakpoint = (int) $s['breakpoint'];
+
+    $css  = fvs_build_device_bubble_css($s, 'desktop');
+    $css .= '.fvs-bubble-wrapper{z-index:' . $z . ';}';
+    $css .= '.fvs-overlay{z-index:' . min(2147483647, max(100000, $z + 1000)) . ';}';
+
+    $css .= '@media (max-width:' . $breakpoint . 'px){';
+    $css .= fvs_build_device_bubble_css($s, 'mobile');
+    // Player no mobile: setas sobre o vídeo, encostadas nas bordas.
+    $css .= '.fvs-player{display:block;}';
+    $css .= '.fvs-stage{width:min(95vw,calc(80vh * var(--fvs-ratio)));max-height:80vh;}';
+    $css .= '.fvs-ui .fvs-nav,.fvs-ui .fvs-nav:hover,.fvs-ui .fvs-nav:focus{position:absolute;top:50%;z-index:2;margin-top:calc(var(--fvs-nav) / -2);}';
+    $css .= '.fvs-ui .fvs-nav--prev{left:6px;}.fvs-ui .fvs-nav--next{right:6px;}';
+    $css .= '.fvs-ui .fvs-overlay-close,.fvs-ui .fvs-overlay-close:hover,.fvs-ui .fvs-overlay-close:focus{top:2vh;right:2vh;}';
+    $css .= '}';
+
+    return $css;
 }
 
 /**
@@ -205,8 +308,9 @@ function fvs_enqueue_front_assets()
  * @param string $type      Contexto ('product', 'page' ou outro).
  * @param string $thumb_url URL do MP4 da bolha. Vazia: usa o primeiro story.
  * @param array  $stories   Lista de ['id' => int, 'url' => string].
+ * @param int    $post_id   Post exibido (padrão: o objeto da consulta atual).
  */
-function fvs_render_stories_bubble($type, $thumb_url, array $stories)
+function fvs_render_stories_bubble($type, $thumb_url, array $stories, $post_id = 0)
 {
     static $instance = 0;
 
@@ -221,7 +325,7 @@ function fvs_render_stories_bubble($type, $thumb_url, array $stories)
         $thumb_url = $stories[0]['url'];
     }
 
-    fvs_enqueue_front_assets();
+    fvs_enqueue_front_assets($type, $post_id ? $post_id : get_queried_object_id());
 
     $instance++;
     $overlay_id = 'fvs-overlay-' . $instance;

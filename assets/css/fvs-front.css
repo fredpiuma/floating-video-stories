@@ -41,23 +41,29 @@
 
 /* ===== Bolha ===== */
 
+/*
+ * Posição, tamanho e camada vêm do CSS gerado pelo plugin (Configurações › Floating Video Stories),
+ * que define left/right, top/bottom, z-index e as variáveis abaixo, para desktop e mobile.
+ */
 .fvs-bubble-wrapper {
+    --fvs-size: 90px;
+    --fvs-dir: -1; /* -1: bolha à esquerda; 1: à direita */
+    --fvs-close: 30px;
+    --fvs-close-offset: -10px;
     position: fixed;
-    bottom: 30vh;
-    left: 20px;
-    z-index: 9999;
     transition: transform .4s ease;
 }
 
+/* Sai pelo lado em que a bolha está quando o teclado virtual abre. */
 .fvs-bubble-wrapper.fvs-hidden-keyboard {
-    transform: translateX(calc(-100% - 30px));
+    transform: translateX(calc(var(--fvs-dir) * (100% + 30px)));
 }
 
 .fvs-bubble {
     position: relative;
     display: block;
-    width: 90px;
-    height: 90px;
+    width: var(--fvs-size);
+    height: var(--fvs-size);
     border-radius: 50%;
     overflow: hidden;
     cursor: pointer;
@@ -87,10 +93,8 @@
 .fvs-ui .fvs-bubble-close:focus {
     position: absolute;
     top: 0;
-    left: 0;
-    margin: -10px 0 0 -10px;
-    width: 30px;
-    height: 30px;
+    width: var(--fvs-close);
+    height: var(--fvs-close);
     background-color: #fff;
     color: #000;
     z-index: 10000;
@@ -110,7 +114,6 @@ html.fvs-open {
 .fvs-overlay {
     position: fixed;
     inset: 0;
-    z-index: 100000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -262,59 +265,7 @@ html.fvs-open {
     display: none;
 }
 
-/* ===== Mobile ===== */
-
-@media (max-width: 640px) {
-    .fvs-bubble-wrapper {
-        bottom: 30vw;
-        left: 3vw;
-        top: auto;
-    }
-
-    .fvs-bubble {
-        width: 27vw;
-        height: 27vw;
-    }
-
-    .fvs-ui .fvs-bubble-close,
-    .fvs-ui .fvs-bubble-close:hover,
-    .fvs-ui .fvs-bubble-close:focus {
-        width: 7vw;
-        height: 7vw;
-        margin: -2vw 0 0 -2vw;
-    }
-
-    /* Setas sobre o vídeo, encostadas nas bordas. */
-    .fvs-player {
-        display: block;
-    }
-
-    .fvs-stage {
-        width: min(95vw, calc(80vh * var(--fvs-ratio)));
-        max-height: 80vh;
-    }
-
-    .fvs-ui .fvs-nav,
-    .fvs-ui .fvs-nav:hover,
-    .fvs-ui .fvs-nav:focus {
-        position: absolute;
-        top: 50%;
-        z-index: 2;
-        margin-top: calc(var(--fvs-nav) / -2);
-    }
-
-    .fvs-ui .fvs-nav--prev {
-        left: 6px;
-    }
-
-    .fvs-ui .fvs-nav--next {
-        right: 6px;
-    }
-
-    .fvs-ui .fvs-overlay-close,
-    .fvs-ui .fvs-overlay-close:hover,
-    .fvs-ui .fvs-overlay-close:focus {
-        top: 2vh;
-        right: 2vh;
-    }
-}
+/*
+ * Mobile: as regras da bolha e do player para telas estreitas são geradas pelo plugin,
+ * com a largura de tela definida nas configurações (padrão: 640px).
+ */
