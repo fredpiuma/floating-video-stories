@@ -155,286 +155,130 @@ function fvs_get_bubble_thumb($post_id)
     return $legacy ? esc_url_raw((string) get_post_meta($post_id, $legacy['thumb'], true)) : '';
 }
 
-// Variável para controlar se o CSS já foi renderizado
-$fvp_styles_rendered = false;
+/**
+ * Post (produto ou página) exibido agora, se ele tiver stories.
+ *
+ * @return int 0 quando não há bolha para exibir.
+ */
+function fvs_current_post_with_stories()
+{
+    $is_product = function_exists('is_product') && is_product();
+    if (!$is_product && !is_page()) {
+        return 0;
+    }
+    $post_id = get_queried_object_id();
+    return ($post_id && fvs_get_stories($post_id, $is_product ? 'product' : 'page')) ? $post_id : 0;
+}
+
+// === Assets do front ===
+add_action('wp_enqueue_scripts', 'fvs_register_front_assets');
+function fvs_register_front_assets()
+{
+    wp_register_style('fvs-front', FVS_URL . 'assets/css/fvs-front.css', array(), FVS_VERSION);
+    wp_register_script('fvs-front', FVS_URL . 'assets/js/fvs-front.js', array(), FVS_VERSION, array(
+        'in_footer' => true,
+        'strategy'  => 'defer',
+    ));
+    wp_localize_script('fvs-front', 'fvsFront', array(
+        'mute'   => __('Desativar som', 'floating-video-stories'),
+        'unmute' => __('Ativar som', 'floating-video-stories'),
+    ));
+
+    // Carrega no <head> quando já se sabe que haverá bolha; evita o carregamento tardio do CSS.
+    if (fvs_current_post_with_stories()) {
+        fvs_enqueue_front_assets();
+    }
+}
+
+function fvs_enqueue_front_assets()
+{
+    if (!wp_style_is('fvs-front', 'registered')) {
+        fvs_register_front_assets();
+    }
+    wp_enqueue_style('fvs-front');
+    wp_enqueue_script('fvs-front');
+}
 
 /**
- * Renderiza a bolha de vídeo com lightbox
+ * Renderiza a bolha flutuante e o player stories.
  *
- * @param string $type Tipo de conteúdo: 'product' ou 'page'
- * @param string $thumb_url URL do vídeo de thumbnail
- * @param string $video_url URL do vídeo principal
+ * @param string $type      Contexto ('product', 'page' ou outro).
+ * @param string $thumb_url URL do MP4 da bolha. Vazia: usa o primeiro story.
+ * @param array  $stories   Lista de ['id' => int, 'url' => string].
  */
-function fvp_render_video_bubble($type, $thumb_url, $video_url)
+function fvs_render_stories_bubble($type, $thumb_url, array $stories)
 {
-    global $fvp_styles_rendered;
+    static $instance = 0;
 
-    // Gerar IDs únicos baseados no tipo
-    $wrapper_id = 'fvp-video-bubble-wrapper-' . $type;
-    $bubble_id = 'fvp-video-bubble-' . $type;
-    $close_btn_id = 'fvp-video-close-btn-' . $type;
-    $overlay_id = 'fvp-video-overlay-' . $type;
-    $main_vid_id = 'fvp-main-video-' . $type;
-    $overlay_close_btn_id = 'fvp-overlay-close-btn-' . $type;
+    $stories = array_values(array_filter(array_map(function ($story) {
+        $url = is_array($story) && !empty($story['url']) ? esc_url_raw($story['url']) : '';
+        return $url ? array('id' => isset($story['id']) ? absint($story['id']) : 0, 'url' => $url) : null;
+    }, $stories)));
+    if (empty($stories)) {
+        return;
+    }
+    if (empty($thumb_url)) {
+        $thumb_url = $stories[0]['url'];
+    }
+
+    fvs_enqueue_front_assets();
+
+    $instance++;
+    $overlay_id = 'fvs-overlay-' . $instance;
+    $single     = count($stories) < 2;
     ?>
-
-    <?php if (!$fvp_styles_rendered) : ?>
-        <style>
-            .fvp-video-bubble-wrapper {
-                position: fixed;
-                bottom: 30vh;
-                left: 20px;
-                z-index: 9999;
-                transition: transform .4s ease;
-            }
-
-            .fvp-video-bubble-wrapper.fvp-hidden-keyboard {
-                transform: translateX(calc(-100% - 30px));
-            }
-
-            .fvp-video-bubble {
-                position: relative;
-                width: 90px;
-                height: 90px;
-                border-radius: 50%;
-                overflow: hidden;
-                cursor: pointer;
-                box-shadow: 0 0 10px rgba(0, 0, 0, .3);
-                transition: transform .3s ease;
-            }
-
-            .fvp-video-bubble:hover {
-                transform: scale(1.08);
-            }
-
-            .fvp-video-bubble video {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-            .fvp-video-close-btn {
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                margin-left: -10px !important;
-                margin-top: -10px !important;
-                width: 30px !important;
-                height: 30px !important;
-                background-color: white !important;
-                color: black !important;
-                border-radius: 50% !important;
-                border: none !important;
-                cursor: pointer !important;
-                font-size: 18px !important;
-                font-weight: bold !important;
-                line-height: 1 !important;
-                z-index: 10000 !important;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
-                transition: background-color 0.2s !important;
-                display: block !important;
-                padding: 0 !important;
-                min-height: auto !important;
-                min-width: auto !important;
-            }
-
-            .fvp-video-close-btn>* {
-                width: 12px;
-                height: 12px;
-            }
-
-            .fvp-video-close-btn:hover {
-                background-color: #eee;
-            }
-
-            .fvp-video-overlay .fvp-overlay-close-btn {
-                position: absolute;
-                top: 3vh;
-                right: 3vh;
-                width: 44px;
-                height: 44px;
-                background-color: white;
-                color: black;
-                border-radius: 50%;
-                border: none;
-                cursor: pointer;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 20px;
-                font-weight: bold;
-                z-index: 90001;
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-                padding: 0;
-            }
-
-            .fvp-video-overlay .fvp-overlay-close-btn:hover {
-                background-color: #eee;
-            }
-
-            .fvp-video-overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.85);
-                justify-content: center;
-                align-items: center;
-                z-index: 100000;
-            }
-
-            .fvp-video-overlay.active {
-                display: flex;
-            }
-
-            .fvp-video-overlay video {
-                width: auto;
-                height: auto;
-                max-width: 90vw;
-                max-height: 90vh;
-                border-radius: 12px;
-                display: block;
-                box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
-            }
-
-            @media (max-width: 640px) {
-                .fvp-video-bubble-wrapper {
-                    bottom: 30vw;
-                    left: 3vw;
-                    top: auto;
-                }
-
-                .fvp-video-bubble {
-                    width: 27vw;
-                    height: 27vw;
-                }
-
-                .fvp-video-close-btn {
-                    width: 7vw;
-                    height: 7vw;
-                    font-size: 5vw;
-                    margin-left: -2vw;
-                    margin-top: -2vw;
-                }
-
-                .fvp-video-overlay video {
-                    max-width: 95vw;
-                    max-height: 80vh;
-                }
-
-                .fvp-video-close-btn>* {
-                    width: 3vw;
-                    height: 3vw;
-                }
-            }
-        </style>
-        <?php $fvp_styles_rendered = true; ?>
-    <?php endif; ?>
-
-    <div class="fvp-video-bubble-wrapper" id="<?php echo esc_attr($wrapper_id); ?>">
-        <div class="fvp-video-bubble" id="<?php echo esc_attr($bubble_id); ?>">
-            <video autoplay muted loop playsinline>
-                <source src="<?php echo esc_url($thumb_url); ?>" type="video/mp4">
-            </video>
+    <div class="fvs-ui fvs-bubble-wrapper fvs-bubble-wrapper--<?php echo esc_attr(sanitize_html_class($type)); ?>" data-fvs-stories="<?php echo esc_attr(wp_json_encode($stories)); ?>" data-fvs-overlay="<?php echo esc_attr($overlay_id); ?>">
+        <div class="fvs-bubble" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="<?php echo esc_attr($overlay_id); ?>" aria-label="<?php esc_attr_e('Abrir vídeos', 'floating-video-stories'); ?>">
+            <video autoplay muted loop playsinline preload="metadata" src="<?php echo esc_url($thumb_url); ?>"></video>
         </div>
-        <button class="fvp-video-close-btn" id="<?php echo esc_attr($close_btn_id); ?>" aria-label="Fechar bolha de vídeo">
-            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 16.3 16.3">
+        <button type="button" class="fvs-btn fvs-bubble-close" aria-label="<?php esc_attr_e('Fechar bolha de vídeo', 'floating-video-stories'); ?>">
+            <svg viewBox="0 0 16.3 16.3" aria-hidden="true">
                 <path d="M1.2,16.3c-.3,0-.6-.1-.8-.3-.5-.5-.5-1.2,0-1.7L14.3.3c.5-.5,1.2-.5,1.7,0,.5.5.5,1.2,0,1.7L2,16c-.2.2-.5.3-.8.3Z" />
                 <path d="M15.2,16.3c-.3,0-.6-.1-.8-.3L.3,2C-.1,1.5-.1.8.3.3.8-.1,1.5-.1,2,.3l14,14c.5.5.5,1.2,0,1.7-.2.2-.5.3-.8.3Z" />
             </svg>
         </button>
     </div>
 
-    <div class="fvp-video-overlay" id="<?php echo esc_attr($overlay_id); ?>" aria-hidden="true">
-        <button class="fvp-overlay-close-btn" id="<?php echo esc_attr($overlay_close_btn_id); ?>" aria-label="Fechar vídeo">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+    <div class="fvs-ui fvs-overlay<?php echo $single ? ' fvs-single' : ''; ?>" id="<?php echo esc_attr($overlay_id); ?>" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e('Vídeos', 'floating-video-stories'); ?>" hidden>
+        <button type="button" class="fvs-btn fvs-overlay-close" aria-label="<?php esc_attr_e('Fechar vídeo', 'floating-video-stories'); ?>">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 0 0 5.7 7.11L10.59 12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4z" />
             </svg>
         </button>
-        <video id="<?php echo esc_attr($main_vid_id); ?>" autoplay muted playsinline loop>
-            <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
-        </video>
+        <div class="fvs-player">
+            <button type="button" class="fvs-btn fvs-nav fvs-nav--prev" aria-label="<?php esc_attr_e('Vídeo anterior', 'floating-video-stories'); ?>">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 4.6a1.2 1.2 0 0 1 0 1.7L9.7 12l5.7 5.7a1.2 1.2 0 1 1-1.7 1.7l-6.5-6.5a1.2 1.2 0 0 1 0-1.7l6.5-6.5a1.2 1.2 0 0 1 1.7 0z" /></svg>
+            </button>
+            <div class="fvs-stage">
+                <video class="fvs-video" playsinline preload="metadata"></video>
+                <div class="fvs-top">
+                    <div class="fvs-bars" aria-hidden="true">
+                        <?php foreach ($stories as $story) : ?>
+                            <span class="fvs-bar"><span class="fvs-bar-fill"></span></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="button" class="fvs-btn fvs-sound" aria-label="<?php esc_attr_e('Desativar som', 'floating-video-stories'); ?>">
+                        <svg class="fvs-icon-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z" /></svg>
+                        <svg class="fvs-icon-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12A4.5 4.5 0 0 0 14 8v2.2l2.5 2.5V12zM19 12a7 7 0 0 1-.6 2.8l1.5 1.5A9 9 0 0 0 14 3.2v2.1A7 7 0 0 1 19 12zM4.3 3 3 4.3 7.7 9H3v6h4l5 5v-6.7l4.3 4.3a7 7 0 0 1-2.3 1.2v2.1a9 9 0 0 0 3.7-1.8l2 2 1.3-1.3L4.3 3zM12 4 9.9 6.1 12 8.2V4z" /></svg>
+                    </button>
+                </div>
+            </div>
+            <button type="button" class="fvs-btn fvs-nav fvs-nav--next" aria-label="<?php esc_attr_e('Próximo vídeo', 'floating-video-stories'); ?>">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 4.6a1.2 1.2 0 0 0 0 1.7l5.7 5.7-5.7 5.7a1.2 1.2 0 1 0 1.7 1.7l6.5-6.5a1.2 1.2 0 0 0 0-1.7l-6.5-6.5a1.2 1.2 0 0 0-1.7 0z" /></svg>
+            </button>
+        </div>
     </div>
-
-    <script>
-        (function() {
-            const wrapper = document.getElementById('<?php echo esc_js($wrapper_id); ?>');
-            const bubble = document.getElementById('<?php echo esc_js($bubble_id); ?>');
-            const closeBtn = document.getElementById('<?php echo esc_js($close_btn_id); ?>');
-            const overlay = document.getElementById('<?php echo esc_js($overlay_id); ?>');
-            const mainVid = document.getElementById('<?php echo esc_js($main_vid_id); ?>');
-            const overlayCloseBtn = document.getElementById('<?php echo esc_js($overlay_close_btn_id); ?>');
-
-            if (!wrapper || !bubble || !closeBtn || !overlay || !mainVid) return;
-
-            // Função para fechar a bolha
-            const closeBubble = () => {
-                wrapper.style.display = 'none';
-            };
-
-            // Ao clicar na bolinha, abre o lightbox e inicia o vídeo automaticamente
-            bubble.addEventListener('click', () => {
-                overlay.classList.add('active');
-                overlay.setAttribute('aria-hidden', 'false');
-                mainVid.muted = true;
-                mainVid.currentTime = 0;
-                mainVid.play().catch(err => console.warn('AutoPlay bloqueado:', err));
-            });
-
-            // Ao clicar no botão de fechar, esconde o wrapper
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                closeBubble();
-            });
-
-            // Fechar o overlay com o botão de fechar interno
-            if (overlayCloseBtn) {
-                overlayCloseBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    overlay.classList.remove('active');
-                    overlay.setAttribute('aria-hidden', 'true');
-                    try {
-                        mainVid.pause();
-                        mainVid.currentTime = 0;
-                    } catch (err) {}
-                });
-            }
-
-            // Fecha o lightbox ao clicar fora do vídeo
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.classList.remove('active');
-                    overlay.setAttribute('aria-hidden', 'true');
-                    mainVid.pause();
-                }
-            });
-
-            // Fecha com tecla ESC
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    if (overlay.classList.contains('active')) {
-                        overlay.classList.remove('active');
-                        overlay.setAttribute('aria-hidden', 'true');
-                        mainVid.pause();
-                    }
-                }
-            });
-
-            // Detecta teclado virtual via visualViewport
-            if (window.visualViewport) {
-                const threshold = 0.75;
-                window.visualViewport.addEventListener('resize', () => {
-                    const ratio = window.visualViewport.height / window.screen.height;
-                    if (ratio < threshold) {
-                        wrapper.classList.add('fvp-hidden-keyboard');
-                    } else {
-                        wrapper.classList.remove('fvp-hidden-keyboard');
-                    }
-                });
-            }
-        })();
-    </script>
     <?php
+}
+
+/**
+ * Wrapper legado (1.3.x), mantido para extensões: um vídeo principal vira um story.
+ *
+ * @param string $type
+ * @param string $thumb_url
+ * @param string $video_url
+ */
+function fvp_render_video_bubble($type, $thumb_url, $video_url)
+{
+    fvs_render_stories_bubble($type, $thumb_url, array(array('id' => 0, 'url' => $video_url)));
 }

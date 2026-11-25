@@ -51,6 +51,5 @@ function fvp_display_page_video_bubble()
     $stories = fvs_get_stories($post->ID, 'page');
     if (empty($stories)) return;
 
-    $thumb_url = fvs_get_bubble_thumb($post->ID);
-    fvp_render_video_bubble('page', $thumb_url ?: $stories[0]['url'], $stories[0]['url']);
+    fvs_render_stories_bubble('page', fvs_get_bubble_thumb($post->ID), $stories);
 }

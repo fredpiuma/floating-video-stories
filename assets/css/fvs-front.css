@@ -1,0 +1,320 @@
+/* Floating Video Stories - bolha flutuante e player stories */
+
+/* Reset dos botões contra estilos do tema (inclusive :hover/:focus). */
+.fvs-ui .fvs-btn,
+.fvs-ui .fvs-btn:hover,
+.fvs-ui .fvs-btn:focus,
+.fvs-ui .fvs-btn:active {
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    border-radius: 50%;
+    font: inherit;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .2s ease, opacity .2s ease, transform .2s ease;
+}
+
+.fvs-ui .fvs-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.fvs-ui .fvs-btn svg {
+    display: block;
+    width: 45%;
+    height: 45%;
+    fill: currentColor;
+    pointer-events: none;
+}
+
+/* ===== Bolha ===== */
+
+.fvs-bubble-wrapper {
+    position: fixed;
+    bottom: 30vh;
+    left: 20px;
+    z-index: 9999;
+    transition: transform .4s ease;
+}
+
+.fvs-bubble-wrapper.fvs-hidden-keyboard {
+    transform: translateX(calc(-100% - 30px));
+}
+
+.fvs-bubble {
+    position: relative;
+    display: block;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .3);
+    transition: transform .3s ease;
+}
+
+.fvs-bubble:hover {
+    transform: scale(1.08);
+}
+
+.fvs-bubble:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+}
+
+.fvs-bubble video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.fvs-ui .fvs-bubble-close,
+.fvs-ui .fvs-bubble-close:hover,
+.fvs-ui .fvs-bubble-close:focus {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: -10px 0 0 -10px;
+    width: 30px;
+    height: 30px;
+    background-color: #fff;
+    color: #000;
+    z-index: 10000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .3);
+}
+
+.fvs-ui .fvs-bubble-close:hover {
+    background-color: #eee;
+}
+
+/* ===== Overlay / player ===== */
+
+html.fvs-open {
+    overflow: hidden;
+}
+
+.fvs-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, .85);
+}
+
+.fvs-overlay[hidden] {
+    display: none;
+}
+
+.fvs-player {
+    --fvs-ratio: .5625; /* 9:16 até o vídeo informar a proporção real */
+    --fvs-nav: 44px;
+    --fvs-gap: 16px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--fvs-gap);
+}
+
+.fvs-stage {
+    position: relative;
+    width: min(calc(90vw - 2 * (var(--fvs-nav) + var(--fvs-gap))), calc(90vh * var(--fvs-ratio)));
+    aspect-ratio: var(--fvs-ratio);
+    max-height: 90vh;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 0 25px rgba(0, 0, 0, .6);
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.fvs-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+.fvs-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    padding: 10px 10px 28px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, .55), rgba(0, 0, 0, 0));
+    pointer-events: none;
+}
+
+.fvs-bars {
+    display: flex;
+    gap: 4px;
+}
+
+.fvs-bar {
+    flex: 1 1 0;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, .35);
+    overflow: hidden;
+}
+
+.fvs-bar-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left center;
+}
+
+.fvs-bar.is-done .fvs-bar-fill {
+    transform: scaleX(1);
+}
+
+.fvs-ui .fvs-sound,
+.fvs-ui .fvs-sound:hover,
+.fvs-ui .fvs-sound:focus {
+    position: absolute;
+    top: 20px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 0, 0, .35);
+    color: #fff;
+    pointer-events: auto;
+}
+
+.fvs-ui .fvs-sound:hover {
+    background-color: rgba(0, 0, 0, .55);
+}
+
+.fvs-ui .fvs-sound .fvs-icon-muted,
+.fvs-ui .fvs-sound.is-muted .fvs-icon-sound {
+    display: none;
+}
+
+.fvs-ui .fvs-sound.is-muted .fvs-icon-muted {
+    display: block;
+}
+
+.fvs-ui .fvs-nav,
+.fvs-ui .fvs-nav:hover,
+.fvs-ui .fvs-nav:focus {
+    flex: 0 0 auto;
+    width: var(--fvs-nav);
+    height: var(--fvs-nav);
+    background-color: rgba(255, 255, 255, .8);
+    color: #000;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
+}
+
+.fvs-ui .fvs-nav:hover {
+    background-color: #fff;
+}
+
+.fvs-ui .fvs-nav.is-disabled {
+    opacity: .35;
+}
+
+.fvs-single .fvs-nav {
+    display: none !important;
+}
+
+.fvs-ui .fvs-overlay-close,
+.fvs-ui .fvs-overlay-close:hover,
+.fvs-ui .fvs-overlay-close:focus {
+    position: absolute;
+    top: 3vh;
+    right: 3vh;
+    width: 44px;
+    height: 44px;
+    background-color: #fff;
+    color: #000;
+    z-index: 3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
+}
+
+.fvs-ui .fvs-overlay-close:hover {
+    background-color: #eee;
+}
+
+.fvs-preloader {
+    display: none;
+}
+
+/* ===== Mobile ===== */
+
+@media (max-width: 640px) {
+    .fvs-bubble-wrapper {
+        bottom: 30vw;
+        left: 3vw;
+        top: auto;
+    }
+
+    .fvs-bubble {
+        width: 27vw;
+        height: 27vw;
+    }
+
+    .fvs-ui .fvs-bubble-close,
+    .fvs-ui .fvs-bubble-close:hover,
+    .fvs-ui .fvs-bubble-close:focus {
+        width: 7vw;
+        height: 7vw;
+        margin: -2vw 0 0 -2vw;
+    }
+
+    /* Setas sobre o vídeo, encostadas nas bordas. */
+    .fvs-player {
+        display: block;
+    }
+
+    .fvs-stage {
+        width: min(95vw, calc(80vh * var(--fvs-ratio)));
+        max-height: 80vh;
+    }
+
+    .fvs-ui .fvs-nav,
+    .fvs-ui .fvs-nav:hover,
+    .fvs-ui .fvs-nav:focus {
+        position: absolute;
+        top: 50%;
+        z-index: 2;
+        margin-top: calc(var(--fvs-nav) / -2);
+    }
+
+    .fvs-ui .fvs-nav--prev {
+        left: 6px;
+    }
+
+    .fvs-ui .fvs-nav--next {
+        right: 6px;
+    }
+
+    .fvs-ui .fvs-overlay-close,
+    .fvs-ui .fvs-overlay-close:hover,
+    .fvs-ui .fvs-overlay-close:focus {
+        top: 2vh;
+        right: 2vh;
+    }
+}

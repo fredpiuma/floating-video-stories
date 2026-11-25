@@ -54,6 +54,5 @@ function fvp_display_product_video_bubble()
     $stories = fvs_get_stories($product->get_id(), 'product');
     if (empty($stories)) return;
 
-    $thumb_url = fvs_get_bubble_thumb($product->get_id());
-    fvp_render_video_bubble('product', $thumb_url ?: $stories[0]['url'], $stories[0]['url']);
+    fvs_render_stories_bubble('product', fvs_get_bubble_thumb($product->get_id()), $stories);
 }
