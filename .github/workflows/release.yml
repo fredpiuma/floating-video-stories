@@ -25,8 +25,9 @@ jobs:
         run: |
           WANTED="${TAG#v}"
           HEADER="$(sed -n 's/^[ *]*Version: *//p' "$MAIN" | head -1 | tr -d '\r ')"
-          echo "tag=$WANTED cabeçalho=$HEADER"
-          for v in "$HEADER"; do
+          CONST="$(sed -n "s/.*define('FVS_VERSION', *'\([^']*\)').*/\1/p" "$MAIN" | head -1)"
+          echo "tag=$WANTED cabeçalho=$HEADER FVS_VERSION=$CONST"
+          for v in "$HEADER" "$CONST"; do
             [ "$v" = "$WANTED" ] || { echo "A versão da tag ($WANTED) não bate com a do código ($v)." >&2; exit 1; }
           done
 

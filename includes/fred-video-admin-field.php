@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
  */
 function fvs_admin_post_types()
 {
-    return array('product', 'page');
+    return (array) apply_filters('fvs_admin_post_types', array('product', 'page'));
 }
 
 // === Assets do admin ===

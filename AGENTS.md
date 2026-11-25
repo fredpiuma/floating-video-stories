@@ -8,7 +8,7 @@ Arquivo principal: `fred-video-produto.php`; módulos em `includes/`. A pasta do
 Toda melhoria ou correção entregue vira uma versão nova publicada no GitHub. Não termine a tarefa sem o release.
 
 1. Escolha a versão (SemVer): correção → `X.Y.Z+1`; recurso novo ou melhoria → `X.Y+1.0`; quebra de compatibilidade → `X+1.0.0`.
-2. Atualize a versão em todos estes lugares: cabeçalho `Version:` de `fred-video-produto.php` (é o único lugar hoje; se criar constante de versão, `readme.txt` etc., acrescente-os aqui e no workflow).
+2. Atualize a versão em todos estes lugares: cabeçalho `Version:` e constante `FVS_VERSION` de `fred-video-produto.php` (o workflow confere os dois contra a tag; se criar `readme.txt` etc., acrescente-os aqui e no workflow).
 3. Acrescente a entrada `## [X.Y.Z] - AAAA-MM-DD` no topo do `CHANGELOG.md`, em português, dizendo o que mudou para quem usa o plugin.
 4. Confira `php -l` nos arquivos PHP alterados.
 5. Commit, push do `master`, e crie o release com as notas tiradas do CHANGELOG:

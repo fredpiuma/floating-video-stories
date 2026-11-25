@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0] - 2026-11-24
+
+- Produtos e páginas agora aceitam **vários vídeos** (até 20), na ordem que você definir arrastando na lista.
+- Ao clicar na bolha, os vídeos abrem num **player no estilo stories**: barras no topo mostram o progresso de cada vídeo e o próximo começa sozinho quando o atual termina. Depois do último, o player fecha.
+- **Setas** à esquerda e à direita do vídeo (sobre o vídeo no celular), toque nas laterais e teclas ← / → para voltar e avançar. Segurar o dedo ou o mouse sobre o vídeo pausa.
+- O vídeo abre **com som** quando o navegador permite; se ele bloquear, toca sem som e o botão de alto-falante no topo liga o som.
+- No produto, os vídeos ficam na nova aba **"Vídeos (stories)"** dos Dados do produto. Na página, na caixa **"Vídeos da Página"**.
+- A miniatura da bolha virou opcional: sem ela, a bolha mostra o primeiro vídeo.
+- **Migração automática:** produtos e páginas configurados nas versões anteriores continuam funcionando sem nenhuma ação; o vídeo principal antigo aparece como o primeiro vídeo da lista. Os dados antigos são preservados, então dá para voltar à 1.3.x se precisar.
+- Mais segurança ao salvar os vídeos da página (verificação de permissão e de origem do formulário).
+- CSS e JavaScript agora são arquivos separados, carregados só nas páginas que têm vídeo.
+
 ## [1.3.2] - 2026-11-24
 
 - O zip de instalação passou a ser gerado só no GitHub, a cada release. Nenhuma mudança no funcionamento do plugin.

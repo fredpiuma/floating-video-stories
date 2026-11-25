@@ -1,16 +1,17 @@
 # Floating Video Stories for WooCommerce
 
-Plugin WordPress modular que exibe vídeos em uma bolha flutuante, com abertura em lightbox, em produtos WooCommerce e páginas estáticas.
+Plugin WordPress modular que exibe vídeos em uma bolha flutuante, com abertura num player no estilo stories, em produtos WooCommerce e páginas estáticas.
 
 ## 🎥 Funcionalidades
 
-- **Vídeos em Produtos**: Adicione dois vídeos a cada produto WooCommerce (thumbnail e vídeo principal)
-- **Vídeos em Páginas**: Adicione vídeos também em páginas estáticas do WordPress
-- **Bolha Flutuante**: Exibe um vídeo em miniatura em uma bolha fixa na tela
-- **Lightbox Interativo**: Clique na bolha para abrir o vídeo em tela cheia com overlay escuro
-- **Responsivo**: Design adaptado para desktop e mobile
-- **Suporte a MP4**: Validação de formato de arquivo
-- **Modular**: Arquitetura extensível para adicionar suporte a novos tipos de conteúdo
+- **Vários vídeos por produto ou página**: até 20 MP4, na ordem que você definir arrastando
+- **Player no estilo stories**: barras de progresso no topo, avanço automático, setas e toque nas laterais para navegar, segurar para pausar
+- **Som**: abre com som quando o navegador permite; senão, toca mudo com botão de alto-falante
+- **Bolha Flutuante**: exibe um vídeo em miniatura numa bolha fixa na tela (miniatura própria ou o primeiro vídeo)
+- **Migração automática**: produtos e páginas configurados na 1.3.x continuam funcionando sem ação manual
+- **Responsivo e acessível**: setas sobre o vídeo no celular, navegação por teclado (←, →, Esc) e foco devolvido à bolha
+- **Leve**: CSS e JS só são carregados nas páginas que têm vídeo
+- **Extensível**: filtro `fvs_stories` e função `fvs_render_stories_bubble()` para outros tipos de conteúdo
 
 ## 📋 Requisitos
 
@@ -47,53 +48,59 @@ Requer WordPress 5.0+ e PHP 7.2+. A parte de produtos requer WooCommerce 3.0+.
 ### Para Produtos WooCommerce
 
 1. Acesse **Produtos** > **Todos os Produtos** e edite um produto
-2. Na seção **Dados Gerais do Produto**, procure por:
-   - **Miniatura do vídeo (MP4)**: Vídeo exibido na bolha flutuante
-   - **Vídeo principal (MP4)**: Vídeo exibido no lightbox ao clicar
-3. Clique em **Enviar/Selecionar** para usar o uploader de mídia
-4. Selecione um arquivo MP4
-5. Publique o produto
+2. Em **Dados do produto**, abra a aba **Vídeos (stories)**
+3. Em **Vídeos (stories)**, clique em **Adicionar vídeos** e selecione um ou mais MP4 (outros formatos são recusados com aviso)
+4. Arraste pela alça para mudar a ordem; use **Remover** para tirar um vídeo
+5. Opcional: em **Miniatura da bolha (MP4, opcional)**, escolha um vídeo curto para a bolha. Se ficar vazio, a bolha usa o primeiro vídeo
+6. Atualize o produto
 
-Quando o cliente visita a página do produto, verá uma bolha de vídeo no canto superior esquerdo.
+Quando o cliente visita a página do produto, vê a bolha de vídeo no canto esquerdo da tela. Para tirar os vídeos, remova todos da lista e salve.
 
 ### Para Páginas
 
 1. Acesse **Páginas** > **Todas as Páginas** e edite uma página
-2. Procure pela meta box **Vídeos da Página**
-3. Preenchha os campos:
-   - **Miniatura do vídeo (MP4)**
-   - **Vídeo principal (MP4)**
+2. Procure pela caixa **Vídeos da Página**
+3. Use os mesmos campos do produto: **Miniatura da bolha** e a lista **Vídeos (stories)**
 4. Publique a página
 
 O comportamento é idêntico ao dos produtos.
 
+### Vindo da versão 1.3.x
+
+Nada a fazer: o vídeo principal antigo aparece como o primeiro vídeo da lista, e a miniatura antiga continua na bolha. Ao salvar o produto ou a página, os dados passam para o formato novo. Os campos antigos são mantidos no banco, então dá para voltar à 1.3.x sem perder a configuração.
+
 ## 🎨 Interface do Usuário
 
 ### Bolha de Vídeo
-- **Desktop**: Círculo de 90px no topo esquerdo (20% do topo)
-- **Mobile**: Círculo responsivo no canto inferior esquerdo
-- **Hover**: Aumenta 8% com efeito smooth
+- **Desktop**: Círculo de 90px à esquerda, a 30% da base da tela
+- **Mobile**: Círculo de 27% da largura da tela, no canto inferior esquerdo; some temporariamente quando o teclado virtual abre
+- **Hover**: Aumenta 8% com efeito suave
+- **X na bolha**: Esconde a bolha
 
-### Botões
-- **X na bolha**: Fecha e esconde a bolha
-- **X no overlay**: Fecha o lightbox
-- **Clique fora do vídeo**: Fecha o lightbox
-- **Tecla ESC**: Fecha o lightbox
-
-### Vídeos
-- **Autoplay**: Ativado com som muted (compatível com políticas de navegador)
-- **Loop**: Ativado
-- **Controles**: HTML5 padrão do navegador
+### Player stories
+- **Barras no topo**: uma por vídeo; a atual enche conforme o vídeo avança
+- **Avanço automático**: ao fim de um vídeo, começa o próximo; depois do último, o player fecha
+- **Setas** (fora do vídeo no desktop, sobre o vídeo no celular), **toque nas laterais** e **teclas ← / →**: voltar e avançar. "Voltar" no primeiro vídeo o reinicia
+- **Segurar** sobre o vídeo: pausa enquanto estiver pressionado
+- **Som**: abre com som quando o navegador permite; o botão de alto-falante liga e desliga, e a escolha vale para os vídeos seguintes
+- **Fechar**: X, clique fora do vídeo ou tecla Esc. O foco volta para a bolha
+- Vídeo que não carrega é pulado; trocar de aba pausa e voltar retoma
 
 ## 📁 Estrutura do Projeto
 
 ```
 floating-video-stories/
-├── fred-video-produto.php              # Plugin principal (loader)
+├── fred-video-produto.php              # Plugin principal (loader, constantes FVS_*)
 ├── includes/
-│   ├── fred-video-common.php           # Código compartilhado (CSS, JS, rendering)
-│   ├── fred-video-produtos.php         # Funcionalidade WooCommerce
-│   └── fred-video-pages.php            # Funcionalidade de páginas
+│   ├── fred-video-common.php           # Dados (fvs_get_stories), render e assets do front
+│   ├── fred-video-admin-field.php      # Campo de stories do admin (render, save, assets)
+│   ├── fred-video-produtos.php         # Aba "Vídeos (stories)" do produto WooCommerce
+│   └── fred-video-pages.php            # Meta box "Vídeos da Página"
+├── assets/
+│   ├── css/fvs-front.css               # Bolha e player stories
+│   ├── js/fvs-front.js                 # Player stories (JS puro)
+│   ├── css/fvs-admin.css               # Estilo do campo no admin
+│   └── js/fvs-admin.js                 # wp.media + lista ordenável
 ├── .github/workflows/release.yml       # Gera e anexa o zip a cada release publicado
 └── README.md                           # Este arquivo
 ```
@@ -102,30 +109,54 @@ floating-video-stories/
 
 ### Adicionar Suporte para Novo Tipo de Conteúdo
 
-Para adicionar suporte a um novo tipo de post (exemplo: CPT customizado):
+Os vídeos ficam na meta `_fvs_stories` (lista de `['id' => ID do anexo, 'url' => URL do MP4]`, na ordem de exibição) e a miniatura em `_fvs_bubble_thumb`. Leia sempre pelas funções, que já tratam o fallback das metas antigas:
 
-1. Crie `includes/fred-video-[posttype].php`
-2. Registre os campos admin (meta box ou outro método)
-3. Implemente salvamento dos metadados
-4. Crie função de display que:
-   - Verifique `is_singular('[posttype]')`
-   - Recupere os vídeos com prefixo `_fred_[posttype]_`
-   - Chame `fvp_render_video_bubble('[posttype]', $thumb, $video)`
-5. Carregue o arquivo no `fred-video-produto.php`
+- `fvs_get_stories( $post_id, $context = '' )`: lista de stories (passa pelo filtro `fvs_stories`)
+- `fvs_get_bubble_thumb( $post_id )`: URL da miniatura configurada (vazia = usa o primeiro vídeo)
+- `fvs_render_stories_bubble( $type, $thumb_url, $stories )`: imprime a bolha e o player e carrega o CSS/JS
 
-Exemplo:
+Exemplo para posts do blog, reaproveitando o campo do admin:
 ```php
-// includes/fred-video-posts.php
-function fvp_display_post_video_bubble() {
-    if (!is_singular('post')) return;
-    $thumb = get_post_meta(get_the_ID(), '_fred_post_video_thumbnail', true);
-    $video = get_post_meta(get_the_ID(), '_fred_post_video', true);
-    if (!empty($thumb) && !empty($video)) {
-        fvp_render_video_bubble('post', $thumb, $video);
+// Campo no editor de posts
+add_action('add_meta_boxes_post', function () {
+    add_meta_box('fvs_post_stories', 'Vídeos', function ($post) {
+        fvs_render_stories_field($post->ID);
+    }, 'post');
+});
+// Carrega o JS/CSS do campo também no editor de posts
+add_filter('fvs_admin_post_types', function ($types) {
+    $types[] = 'post';
+    return $types;
+});
+add_action('save_post_post', function ($post_id) {
+    $data = fvs_read_stories_request($post_id);
+    if (null !== $data) {
+        fvs_save_stories_meta($post_id, $data);
     }
-}
-add_action('wp_footer', 'fvp_display_post_video_bubble');
+});
+
+// Exibição
+add_action('wp_footer', function () {
+    if (!is_singular('post')) return;
+    $stories = fvs_get_stories(get_the_ID(), 'post');
+    if ($stories) {
+        fvs_render_stories_bubble('post', fvs_get_bubble_thumb(get_the_ID()), $stories);
+    }
+});
 ```
+
+Para alterar a lista exibida sem mexer no banco, use o filtro:
+```php
+add_filter('fvs_stories', function ($stories, $post_id, $context) {
+    // ex.: acrescentar um vídeo institucional no fim de todos os produtos
+    if ('product' === $context) {
+        $stories[] = ['id' => 0, 'url' => 'https://exemplo.com/wp-content/uploads/institucional.mp4'];
+    }
+    return $stories;
+}, 10, 3);
+```
+
+A função antiga `fvp_render_video_bubble( $type, $thumb_url, $video_url )` continua disponível e exibe o vídeo como um player de um story só.
 
 ### Testar Localmente
 
@@ -142,17 +173,16 @@ define('WP_DEBUG_LOG', true);
 ## 🐛 Troubleshooting
 
 **P: Os vídeos não aparecem nas páginas de produto**
-- Confirme que os dois campos (thumbnail e principal) estão preenchidos
+- Confirme que há pelo menos um vídeo na lista **Vídeos (stories)**
 - Verifique que os arquivos são MP4 válidos
 - Limpe o cache do navegador
 
-**P: O autoplay não funciona em alguns navegadores**
-- É uma limitação de segurança do navegador (exige vídeo muted)
-- O plugin já vem com `muted` ativado automaticamente
+**P: O vídeo abre sem som**
+- O navegador bloqueou o som automático. Toque no alto-falante no topo do player para ligar
+- A bolha sempre toca sem som, como exigem os navegadores
 
-**P: Múltiplos vídeos na mesma página causam conflito**
-- O plugin gera IDs únicos para cada vídeo
-- Não deve haver conflito, mas limpe cache se houver
+**P: Mais de uma bolha na mesma página causa conflito**
+- Não: cada bolha é uma instância independente, sem IDs fixos
 
 ## 📝 Notas de Versão
 
