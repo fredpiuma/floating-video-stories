@@ -20,6 +20,9 @@ define('FVS_URL', plugin_dir_url(__FILE__));
 // Funcionalidades comuns (dados, renderização e assets do front)
 require_once FVS_PATH . 'includes/fred-video-common.php';
 
+// Configurações (posição, tamanho e camada da bolha)
+require_once FVS_PATH . 'includes/fred-video-settings.php';
+
 // Componente de administração (lista de stories)
 require_once FVS_PATH . 'includes/fred-video-admin-field.php';
 
