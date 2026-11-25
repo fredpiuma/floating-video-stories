@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Plugin Name: Fred Video Produtos e Páginas
+ * Plugin Name: Floating Video Stories for WooCommerce
  * Description: Plugin para adicionar vídeos aos produtos WooCommerce e páginas.
  * Author: Frederico de Castro
- * Author URI: https://www.fredericodecastro.com.br
- * Version: 1.4.0
+ * Author URI: https://www.fredericodecastro.com.br/links
+ * Version: 1.4.1
  * Text Domain: floating-video-stories
  */
 
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('FVS_VERSION', '1.4.0');
+define('FVS_VERSION', '1.4.1');
 define('FVS_PATH', plugin_dir_path(__FILE__));
 define('FVS_URL', plugin_dir_url(__FILE__));
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1] - 2026-11-24
+
+- O plugin passou a aparecer na lista de plugins do WordPress como **Floating Video Stories for WooCommerce**, o nome oficial do projeto. Ele continua ativo após a atualização, sem precisar reativar.
+- Link do autor atualizado.
+- Nenhuma mudança no funcionamento do plugin.
+
 ## [1.4.0] - 2026-11-24
 
 - Produtos e páginas agora aceitam **vários vídeos** (até 20), na ordem que você definir arrastando na lista.

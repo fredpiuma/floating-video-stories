@@ -29,7 +29,7 @@ Esse zip tem só os arquivos do plugin. Não use o "Source code (zip)" do GitHub
 
 1. Baixe o zip pelo link acima.
 2. Em **Plugins → Adicionar novo → Enviar plugin**, escolha o arquivo e clique em **Instalar agora**.
-3. Ative o **Fred Video Produtos e Páginas**.
+3. Ative o **Floating Video Stories for WooCommerce**.
 
 Para atualizar, envie o zip da versão nova da mesma forma e confirme a substituição da versão instalada.
 
