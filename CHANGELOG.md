@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.2] - 2026-11-24
+
+- README: o comando de instalação pelo WP-CLI agora já inclui `--force`, então o mesmo comando instala e atualiza o plugin.
+- Nenhuma mudança no funcionamento do plugin.
+
 ## [1.4.1] - 2026-11-24
 
 - O plugin passou a aparecer na lista de plugins do WordPress como **Floating Video Stories for WooCommerce**, o nome oficial do projeto. Ele continua ativo após a atualização, sem precisar reativar.

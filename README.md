@@ -36,10 +36,10 @@ Para atualizar, envie o zip da versão nova da mesma forma e confirme a substitu
 ### Pelo WP-CLI
 
 ```bash
-wp plugin install https://github.com/fredpiuma/floating-video-stories/releases/latest/download/floating-video-stories.zip --activate
+wp plugin install https://github.com/fredpiuma/floating-video-stories/releases/latest/download/floating-video-stories.zip --force --activate
 ```
 
-Para atualizar para a última versão, rode o mesmo comando com `--force`.
+O mesmo comando instala e atualiza: o `--force` substitui a versão instalada pela última, já que o plugin não tem atualização automática pelo painel.
 
 Requer WordPress 5.0+ e PHP 7.2+. A parte de produtos requer WooCommerce 3.0+.
 
